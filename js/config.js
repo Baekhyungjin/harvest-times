@@ -9,3 +9,6 @@ window.TN_CONFIG = {
   BUCKET: "times-media",    // 이미지 저장 버킷
   ADMIN_DOMAIN: "times-admin.com" // 로그인 화면에 ID만 입력했을 때 붙는 이메일 도메인
 };
+
+/* HARVEST_FAVICON_FALLBACK: 정적 head가 없는 관리자도 같은 아이콘 사용 */
+(function(){if(!document.querySelector('link[rel="icon"]')){var i=document.createElement("link");i.rel="icon";i.type="image/svg+xml";i.href=new URL("../favicon.svg?v=1",document.currentScript.src).href;document.head.appendChild(i);}})();
