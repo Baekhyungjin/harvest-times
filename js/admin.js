@@ -22,7 +22,7 @@ function loginView(msg){
 }
 
 /* ---------- 틀 ---------- */
-var NAV=[["dash","대시보드"],["articles","기사 관리"],["edit/new","기사 작성"],["sections","메뉴·섹션"],["banners","배너"],["inbox","접수함"],["pages","고정 페이지"],["settings","사이트 설정"]];
+var NAV=[["dash","대시보드"],["articles","기사 관리"],["edit/new","기사 작성"],["sections","메뉴·섹션"],["banners","배너"],["inbox","접수함"],["applications","선교사·기자단 승인"],["pages","고정 페이지"],["settings","사이트 설정"]];
 async function start(){
   document.body.className="";
   secs=await TN.sections();
@@ -47,7 +47,7 @@ VIEWS.dash=async function(m){
    '<div class="card"><h3>최근 기사</h3>'+(rec.length?'<table>'+rec.map(function(a){return '<tr><td><a href="#/edit/'+a.id+'">'+E(a.title)+'</a></td><td>'+E(secName(a.section_id))+'</td><td>'+(a.status==="published"?"발행":"임시")+'</td></tr>';}).join("")+'</table>':'<p class="muted">아직 기사가 없습니다. "기사 작성"에서 첫 기사를 등록하세요.</p>')+'</div>'+
    (TN.hasSample()?'<div class="card"><h3>예시 데이터 (하베스트대학교 공개 내용 기반)</h3><p class="muted">예시 기사 29건, 광고 배너 8개, 접수 예시 5건입니다. 실제 운영 전에 "예시 데이터 지우기"로 삭제하세요. 지워도 직접 만든 기사는 남습니다.</p><button class="b" id="ldS">예시 데이터 넣기</button> <button class="b line" id="clS">예시 데이터 지우기</button></div>':'')+(TN.demo?'<div class="card"><h3>데모 도구</h3><p class="muted">레이아웃 확인용입니다. 실제 서버(Supabase) 연결 시에는 이 버튼이 데이터를 만들지 않도록 사용하지 마세요.</p><button class="b" id="seed">샘플 기사 24개 만들기</button> <button class="b line" id="rst">데모 데이터 모두 지우기</button></div>':'');
   if($("#ldS")){ $("#ldS").onclick=async function(){ this.disabled=true; try{ await TN.loadSample(); toast("예시 데이터를 넣었습니다."); route(); }catch(e){ toast(e.message,1); } }; $("#clS").onclick=async function(){ if(!confirm("예시 기사, 배너, 접수를 지울까요?"))return; await TN.clearSample(); toast("지웠습니다."); route(); }; }
-  if(TN.demo){ $("#seed").onclick=async function(){ await TN.seedSamples(24); toast("샘플 기사를 만들었습니다."); route(); }; $("#rst").onclick=function(){ if(confirm("데모 데이터를 모두 지울까요?")){ TN.demoReset(); location.reload(); } }; }
+  if(TN.demo){ $("#seed").onclick=async function(){ await TN.seedSamples(24); toast("샘플 기사를 만들었습니다."); route(); }; $("#rst").onclick=function(){ if(confirm("이 브라우저의 데모 기사·설정·회원·신청·승인 기록을 모두 지우고 로그아웃할까요?")){ TN.demoReset(); location.reload(); } }; }
 };
 /* ---------- 기사 목록 ---------- */
 VIEWS.articles=async function(m){
@@ -107,7 +107,7 @@ VIEWS.sections=async function(m){
   function form(s){
     s=s||{name:"",code:"",kind:"news",sort:(secs.length+1),visible:true,parent_id:"",link_url:""};
     $("#sf").innerHTML='<form class="card form" id="sform"><h3>'+(s.id?"섹션 수정":"섹션 추가")+'</h3><div class="g3"><div><label>이름 *</label><input name="name" required value="'+E(s.name)+'"></div><div><label>코드 *</label><input name="code" required pattern="[a-z0-9_-]+" value="'+E(s.code)+'"></div><div><label>순서</label><input name="sort" type="number" value="'+s.sort+'"></div></div><div class="g3"><div><label>상위 메뉴</label><select name="parent_id"><option value="">(없음: 상단 메뉴)</option>'+top.filter(function(t){return t.id!==s.id;}).map(function(t){return '<option value="'+t.id+'"'+(String(s.parent_id)===String(t.id)?" selected":"")+'>'+E(t.name)+'</option>';}).join("")+'</select></div><div><label>종류</label><select name="kind">'+Object.keys(NEWS_KINDS).map(function(k){return '<option value="'+k+'"'+(s.kind===k?" selected":"")+'>'+NEWS_KINDS[k]+'</option>';}).join("")+'</select></div><div><label>외부 링크(종류가 링크일 때)</label><input name="link_url" value="'+E(s.link_url||"")+'"></div></div><label class="chk"><input type="checkbox" name="visible"'+(s.visible!==false?" checked":"")+'> 메뉴에 표시</label><p><button class="b">저장</button></p></form>';
-    $("#sform").onsubmit=async function(e){ e.preventDefault(); var f=new FormData(e.target); var row={name:f.get("name"),code:f.get("code"),sort:+f.get("sort"),parent_id:f.get("parent_id")?+f.get("parent_id"):null,kind:f.get("kind"),link_url:f.get("link_url")||null,visible:!!f.get("visible")}; if(s.id) row.id=s.id;
+    $("#sform").onsubmit=async function(e){ e.preventDefault(); var f=new FormData(e.target); var row={name:f.get("name"),code:f.get("code"),sort:+f.get("sort"),parent_id:f.get("parent_id")?+f.get("parent_id"):null,kind:f.get("kind"),link_url:f.get("link_url")||null,visible:!!f.get("visible")}; if(row.kind==="link"&&(!/^https?:\/\//i.test(row.link_url||"")||!TN.safeLink(row.link_url))){toast("외부 링크는 http 또는 https 주소를 입력해주세요.",1);return;} if(s.id) row.id=s.id;
       try{ await TN.save("sections",row); toast("저장했습니다."); route(); }catch(err){toast("저장 실패: "+err.message,1);} };
     $("#sf").scrollIntoView({behavior:"smooth"});
   }
@@ -129,7 +129,7 @@ VIEWS.banners=async function(m){
   [].forEach.call(document.querySelectorAll("form.bn"),function(f){
     var img=(bs.filter(function(x){return x.slot===f.dataset.slot;})[0]||{}).image_url||"";
     f.querySelector("input[type=file]").onchange=async function(){ try{ img=await TN.upload(this.files[0]); f.querySelector(".bpv").innerHTML='<img src="'+E(img)+'">'; }catch(e){toast(e.message,1);} };
-    f.onsubmit=async function(e){ e.preventDefault(); var fd=new FormData(f); var row={slot:f.dataset.slot,image_url:img||null,link_url:fd.get("link_url")||null,active:!!fd.get("active"),title:TN.BANNER_SLOTS.filter(function(s){return s.slot===f.dataset.slot;})[0].label}; if(fd.get("id")) row.id=+fd.get("id");
+    f.onsubmit=async function(e){ e.preventDefault(); var fd=new FormData(f); var row={slot:f.dataset.slot,image_url:img||null,link_url:fd.get("link_url")||null,active:!!fd.get("active"),title:TN.BANNER_SLOTS.filter(function(s){return s.slot===f.dataset.slot;})[0].label}; if(row.link_url&&!TN.safeLink(row.link_url)){toast("올바른 http 또는 https 링크를 입력해주세요.",1);return;} if(fd.get("id")) row.id=+fd.get("id");
       try{ await TN.save("banners",row); toast("저장했습니다."); route(); }catch(err){toast("저장 실패: "+err.message,1);} };
     var rm=f.querySelector(".rm"); if(rm) rm.onclick=async function(e){ e.preventDefault(); if(!confirm("이 배너를 제거할까요?"))return; await TN.del("banners",f.querySelector("[name=id]").value); route(); };
   });
@@ -167,6 +167,21 @@ VIEWS.settings=async function(m){
   $("#lf2").onchange=async function(){ try{ logo=await TN.upload(this.files[0]); $("#lp").innerHTML='<img src="'+E(logo)+'" style="max-height:60px">'; }catch(e){toast(e.message,1);} };
   $("#stf").onsubmit=async function(e){ e.preventDefault(); var fd=new FormData(e.target);
     try{ for(var [k,v] of fd.entries()){ await TN.saveSetting(k,v); } await TN.saveSetting("logo_url",logo); toast("저장했습니다."); }catch(err){toast("저장 실패: "+err.message,1);} };
+};
+
+
+/* ---------- 선교사·기자단 신청 승인 ---------- */
+VIEWS.applications=async function(m){
+ if(!TN.member||!TN.member.ready()){m.innerHTML='<h2>선교사·기자단 승인</h2><div class="card">회원 인증·승인 서버 연결이 필요합니다.</div>';return;}
+ if(!await TN.isAdmin())throw new Error("관리자 권한이 필요합니다.");
+ var rows=await TN.member.adminApplications(),members=await TN.member.adminMembers();
+ var labels={pending:"승인 대기",approved:"승인",rejected:"반려",suspended:"중지"};
+ m.innerHTML='<h2>선교사·기자단 승인</h2><div class="card"><p>'+(TN.demo?'브라우저 안에서만 작동하는 승인 시연입니다. 다른 기기의 신청과 공유되지 않습니다. 실제 개인정보를 입력하지 마세요.':'신청 내용을 검토한 뒤 작성 권한을 승인하세요.')+'</p><p>회원 '+members.length+'명 · 승인 대기 '+rows.filter(function(a){return a.status==="pending";}).length+'건</p><a class="b line" href="member.html?mode=apply" target="_blank" rel="noopener">신청 화면 보기</a> <button class="b line" id="refresh-members">새로고침</button></div><div class="filters"><label for="af">상태</label><select id="af"><option value="all">전체</option><option value="pending">승인 대기</option><option value="approved">승인</option><option value="rejected">반려</option></select><label for="ak">유형</label><select id="ak"><option value="all">전체</option><option value="missionary">선교사</option><option value="reporter">기자단</option></select></div><div id="application-list"></div>';
+ function draw(){var status=$("#af").value,k=$("#ak").value;var filtered=rows.filter(function(a){return(status==="all"||a.status===status)&&(k==="all"||a.kind===k);});
+ $("#application-list").innerHTML=filtered.length?filtered.map(function(a){return '<article class="card" data-app="'+a.id+'"><h3>'+E(a.name)+' · '+(a.kind==="missionary"?'선교사':'기자단')+' <span class="pill '+(a.status==="approved"?'ok':'')+'">'+E(labels[a.status]||a.status)+'</span></h3><p>'+E(a.email)+'<br>소속: '+E(a.organization)+' · 활동 지역: '+E(a.region)+'</p><p style="white-space:pre-wrap;overflow-wrap:anywhere">'+E(a.introduction)+'</p><small>신청: '+TN.fmt(a.created_at,true)+'</small>'+(a.status==="pending"?'<form class="form review-form"><label for="note-'+a.id+'">검토 메모 (신청자에게 표시)</label><textarea id="note-'+a.id+'" name="note" maxlength="500" rows="2"></textarea><p><button class="b" name="decision" value="approved">승인</button> <button class="b line" name="decision" value="rejected">반려</button></p><p class="review-msg" role="status" aria-live="polite"></p></form>':'<p>처리: '+TN.fmt(a.reviewed_at,true)+'<br>검토 메모: '+E(a.review_note||'없음')+'</p>')+'</article>';}).join(''):'<div class="card"><p>해당 신청이 없습니다.</p></div>';
+ document.querySelectorAll('.review-form').forEach(function(f){f.onsubmit=async function(e){e.preventDefault();var decision=e.submitter&&e.submitter.value;if(!decision)return;var id=f.closest('[data-app]').dataset.app;f.querySelectorAll('button').forEach(function(b){b.disabled=true;});try{await TN.member.review(id,decision,f.elements.note.value);toast(decision==="approved"?"작성 권한을 승인했습니다.":"반려했습니다.");await VIEWS.applications(m);}catch(err){f.querySelector('.review-msg').textContent=err.message;f.querySelectorAll('button').forEach(function(b){b.disabled=false;});}};});
+ }
+ $("#af").onchange=draw;$("#ak").onchange=draw;$("#refresh-members").onclick=function(){VIEWS.applications(m).catch(function(e){toast(e.message,1);});};draw();
 };
 
 /* ---------- 시작 ---------- */

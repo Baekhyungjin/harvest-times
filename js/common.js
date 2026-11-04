@@ -5,7 +5,7 @@ U.q = function(k){ return new URLSearchParams(location.search).get(k); };
 U.secUrl = function(s){
   if(s.kind==="board") return "board.html?b="+encodeURIComponent(s.code)+"&s="+s.id;
   if(s.kind==="page") return "page.html?slug="+encodeURIComponent(s.code);
-  if(s.kind==="link"&&s.link_url) return s.link_url;
+  if(s.kind==="link"&&s.link_url) return TN.safeLink(s.link_url)||"#";
   return "list.html?s="+s.id;
 };
 U.artUrl = function(a){ return "article.html?id="+a.id; };
@@ -19,7 +19,7 @@ U.ad = function(slot,cls,w,h){
   var def = TN.BANNER_SLOTS.filter(function(x){return x.slot===slot;})[0];
   var inner = b&&b.image_url ? '<img src="'+E(b.image_url)+'" alt="'+E(b.title||"광고")+'">' : '광고 배너<br>'+(def?def.size:"");
   var h = '<div class="ad '+(cls||"")+'">'+inner+'</div>';
-  return b&&b.link_url ? '<a href="'+E(b.link_url)+'" target="_blank" rel="noopener" class="adlink">'+h+'</a>' : h;
+  return b&&TN.safeLink(b.link_url) ? '<a href="'+E(TN.safeLink(b.link_url))+'" target="_blank" rel="noopener" class="adlink">'+h+'</a>' : h;
 };
 U.pad = function(arr,n){ var o=arr.slice(0,n); while(o.length<n) o.push(null); return o; };
 
@@ -33,8 +33,8 @@ U.header = function(active){
   var d=new Date(), wk="일월화수목금토"[d.getDay()], p=function(n){return String(n).padStart(2,"0");};
   var date = "오늘: "+d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes())+" ("+wk+")";
   var logo = S.logo_url ? '<img src="'+E(S.logo_url)+'" alt="'+E(S.site_name)+'">' : '<b>'+E(S.site_name.replace(/ ?전자신문/,"")||S.site_name)+'</b><small>'+E(S.site_en)+'</small>';
-  var h = '<div class="top"><div class="wrap"><div class="l"><a href="board.html?b=report&write=1">기사제보</a><a href="board.html?b=ad&write=1">광고문의</a></div>'+
-    '<div class="r"><span>'+date+'</span><a href="admin.html">로그인</a><a href="page.html?slug=join">회원가입</a></div></div></div>'+
+  var h = '<div class="top"><div class="wrap"><div class="l"><a href="board.html?b=report&write=1">기사제보</a><a href="board.html?b=ad&write=1">광고문의</a><a href="member.html?mode=apply">기자단·선교사 신청</a></div>'+
+    '<div class="r"><span>'+date+'</span><a href="member.html?mode=login" id="member-login-link">로그인</a><a href="member.html?mode=join" id="member-signup-link">회원가입</a></div></div></div>'+
     '<div class="logoarea"><div class="wrap"><div class="tb">'+U.ad("top_left")+'</div><a class="logo" href="index.html">'+logo+'</a></div></div>'+
     '<div class="gnb"><div class="wrap"><button class="ham" aria-label="전체메뉴"><i></i></button><ul class="m">'+
     top.map(function(s){return '<li><a href="'+E(U.secUrl(s))+'" data-id="'+s.id+'" class="'+(s.id===subOwner?"on":"")+'">'+E(s.name)+'</a></li>';}).join("")+'</ul>'+
@@ -43,6 +43,7 @@ U.header = function(active){
     '<div class="sbar"><div class="wrap"><form action="list.html"><input name="q" placeholder="검색어를 입력하세요" aria-label="검색어"><button>검색</button></form></div></div>'+
     '<div class="sub"><div class="wrap" id="subbar"></div></div>';
   document.getElementById("hdr").innerHTML = h;
+  if(TN.member)TN.member.current().then(function(user){if(!user)return;var login=document.getElementById("member-login-link"),join=document.getElementById("member-signup-link");if(login){login.href="member.html?mode=account";login.textContent="마이페이지";}if(join){join.href="member.html?mode=write";join.textContent="글쓰기";}}).catch(function(){});
   function drawSub(id){
     document.getElementById("subbar").innerHTML = kids(id).map(function(k){return '<a href="'+E(U.secUrl(k))+'" class="'+(k.id==active?"on":"")+'">'+E(k.name)+'</a>';}).join("");
     [].forEach.call(document.querySelectorAll(".gnb ul.m a"),function(a){a.classList.toggle("on",a.dataset.id==id);});
@@ -55,10 +56,10 @@ U.header = function(active){
 };
 U.footer = function(){
   var S=U.S;
-  var links=[["매체소개","about"],["기사제보","@report"],["광고문의","@ad"],["이용약관","terms"],["개인정보처리방침","privacy","pp"],["청소년보호정책","youth"],["저작권보호정책","copyright"],["이메일무단수집거부","email"]];
+  var links=[["매체소개","about"],["기사제보","@report"],["광고문의","@ad"],["기자단·선교사 신청","@member"],["이용약관","terms"],["개인정보처리방침","privacy","pp"],["청소년보호정책","youth"],["저작권보호정책","copyright"],["이메일무단수집거부","email"]];
   var logo = S.logo_url ? '<img src="'+E(S.logo_url)+'" alt="">' : '<b>'+E(S.site_name.replace(/ ?전자신문/,"")||S.site_name)+'</b><small>'+E(S.site_en)+'</small>';
   document.getElementById("ftr").innerHTML = '<div class="ft"><div class="wrap"><a class="logo" href="index.html">'+logo+'</a><div><nav>'+
-    links.map(function(l){ var href = l[1].charAt(0)==="@" ? "board.html?b="+l[1].slice(1)+"&write=1" : "page.html?slug="+l[1]; return '<a class="'+(l[2]||"")+'" href="'+href+'">'+l[0]+'</a>'; }).join("")+'</nav>'+
+    links.map(function(l){ var href = l[1]==="@member" ? "member.html?mode=apply" : l[1].charAt(0)==="@" ? "board.html?b="+l[1].slice(1)+"&write=1" : "page.html?slug="+l[1]; return '<a class="'+(l[2]||"")+'" href="'+href+'">'+l[0]+'</a>'; }).join("")+'</nav>'+
     '<p><span>주소: '+E(S.address)+'</span><span>대표전화: '+E(S.phone)+'</span><span>청소년보호책임자: '+E(S.youth_officer)+'</span><br><span>제호: '+E(S.reg_title)+'</span><span>등록번호: '+E(S.reg_no)+'</span><span>등록일: '+E(S.reg_date)+'</span><span>발행·편집인: '+E(S.publisher)+'</span></p>'+
     '<p>'+E(S.copyright)+'</p></div></div></div><button class="totop" aria-label="맨 위로">&#8593;</button>';
   document.querySelector(".totop").onclick=function(){window.scrollTo({top:0,behavior:"smooth"});};

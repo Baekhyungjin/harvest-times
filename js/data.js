@@ -4,7 +4,7 @@ var LIVE = !!(C.SUPABASE_URL && C.SUPABASE_ANON_KEY);
 var TN = window.TN = { live: LIVE, demo: !LIVE };
 
 /* ---------- 기본 데이터(메뉴 구조) ---------- */
-var SEED_SECTIONS = [{"id":1001,"parent_id":null,"name":"뉴스","code":"news","kind":"news","sort":1},{"id":1111,"parent_id":1001,"name":"하베스트 대학소식 (공지 / 행사)","code":"univ-news","kind":"news","sort":1},{"id":1112,"parent_id":1001,"name":"하베스트 강의소식","code":"lectures","kind":"news","sort":2},{"id":1113,"parent_id":1001,"name":"하베스트은퇴.노후복지소식","code":"retirement-welfare","kind":"news","sort":3},{"id":2001,"parent_id":null,"name":"매거진","code":"magazine","kind":"news","sort":2},{"id":2111,"parent_id":2001,"name":"커버스토리 / 특집","code":"cover-story","kind":"news","sort":1},{"id":2112,"parent_id":2001,"name":"선교 현장 리포트 & 인터뷰","code":"field-report","kind":"news","sort":2},{"id":2113,"parent_id":2001,"name":"포토스케치","code":"photo-sketch","kind":"photo","sort":3},{"id":2114,"parent_id":2001,"name":"PDF / 이북 보기","code":"archive","kind":"news","sort":4},{"id":3001,"parent_id":null,"name":"선교 네트워크","code":"mission-network","kind":"news","sort":3},{"id":3111,"parent_id":3001,"name":"파송선교사 현장 소식","code":"mission-updates","kind":"news","sort":1},{"id":3112,"parent_id":3001,"name":"선교단체 협력 행사 소식","code":"partner-events","kind":"news","sort":2},{"id":4001,"parent_id":null,"name":"칼럼","code":"columns","kind":"news","sort":4},{"id":4111,"parent_id":4001,"name":"교수·학자 칼럼","code":"scholar-column","kind":"news","sort":1},{"id":4112,"parent_id":4001,"name":"목회자 칼럼","code":"pastor-column","kind":"news","sort":2},{"id":4113,"parent_id":4001,"name":"선교사 칼럼","code":"missionary-column","kind":"news","sort":3},{"id":5001,"parent_id":null,"name":"독자 미디어","code":"reader-media","kind":"news","sort":5},{"id":5111,"parent_id":5001,"name":"임명된 독자 기자단 기고","code":"appointed-reporters","kind":"news","sort":1},{"id":5112,"parent_id":5001,"name":"기사 제보 및 참여","code":"report","kind":"board","sort":2},{"id":6001,"parent_id":null,"name":"타임 TV","code":"time-tv","kind":"news","sort":6},{"id":6111,"parent_id":6001,"name":"하베스트 영상 / 브이로그","code":"harvest-video","kind":"video","sort":1},{"id":6112,"parent_id":6001,"name":"후원 안내 및 참여하기","code":"support","kind":"page","sort":2}];
+var SEED_SECTIONS = [{"id":1001,"parent_id":null,"name":"뉴스","code":"news","kind":"news","sort":1},{"id":1111,"parent_id":1001,"name":"하베스트 대학소식 (공지 / 행사)","code":"univ-news","kind":"news","sort":1},{"id":1112,"parent_id":1001,"name":"하베스트 강의소식","code":"lectures","kind":"news","sort":2},{"id":1113,"parent_id":1001,"name":"하베스트 은퇴.노후복지소식","code":"retirement-welfare","kind":"news","sort":3},{"id":2001,"parent_id":null,"name":"매거진","code":"magazine","kind":"news","sort":2},{"id":2111,"parent_id":2001,"name":"커버스토리 / 특집","code":"cover-story","kind":"news","sort":1},{"id":2112,"parent_id":2001,"name":"선교 현장 리포트 & 인터뷰","code":"field-report","kind":"news","sort":2},{"id":2113,"parent_id":2001,"name":"포토스케치","code":"photo-sketch","kind":"photo","sort":3},{"id":2114,"parent_id":2001,"name":"PDF / 이북 보기","code":"archive","kind":"news","sort":4},{"id":3001,"parent_id":null,"name":"선교 네트워크","code":"mission-network","kind":"news","sort":3},{"id":3111,"parent_id":3001,"name":"선교소식","code":"mission-updates","kind":"news","sort":1},{"id":3112,"parent_id":3001,"name":"선교단체 협력 행사 소식","code":"partner-events","kind":"news","sort":2},{"id":4001,"parent_id":null,"name":"칼럼","code":"columns","kind":"news","sort":4},{"id":4111,"parent_id":4001,"name":"교수·학자 칼럼","code":"scholar-column","kind":"news","sort":1},{"id":4112,"parent_id":4001,"name":"목회자 칼럼","code":"pastor-column","kind":"news","sort":2},{"id":4113,"parent_id":4001,"name":"선교사 칼럼","code":"missionary-column","kind":"news","sort":3},{"id":5001,"parent_id":null,"name":"독자 미디어","code":"reader-media","kind":"news","sort":5},{"id":5111,"parent_id":5001,"name":"임명된 독자 기자단 기고","code":"appointed-reporters","kind":"news","sort":1},{"id":5112,"parent_id":5001,"name":"기사 제보 및 참여","code":"report","kind":"board","sort":2},{"id":6001,"parent_id":null,"name":"타임 TV","code":"time-tv","kind":"news","sort":6},{"id":6111,"parent_id":6001,"name":"하베스트 영상 / 브이로그","code":"harvest-video","kind":"video","sort":1},{"id":6112,"parent_id":6001,"name":"후원 안내 및 참여하기","code":"support","kind":"page","sort":2}];
 var SEED_SETTINGS = {
  site_name:"하베스트 타임스", site_en:"HARVEST TIMES", tagline:"",
  address:"[주소 입력]", phone:"[대표전화 입력]", youth_officer:"[청소년보호책임자 입력]",
@@ -37,8 +37,8 @@ TN.BANNER_SLOTS = [
 var KEY = "tn_demo_v1";
 function dload(){
   var s = localStorage.getItem(KEY);
-  if(s){ try{ var existing=JSON.parse(s); if(!existing.menu_version||existing.menu_version<2) migrateMenu(existing); if(existing.menu_version<3) updateWelfareMenu(existing); return existing; }catch(e){} }
-  var d = {sections:SEED_SECTIONS.slice(),articles:[],banners:[],settings:[],pages:SEED_PAGES.slice(),posts:[],menu_version:3,seq:{articles:1,banners:1,posts:1,sections:7000}};
+  if(s){ try{ var existing=JSON.parse(s); if(!existing.menu_version||existing.menu_version<2) migrateMenu(existing); if(existing.menu_version<3) updateWelfareMenu(existing); if(existing.menu_version<4) updateMemberMenu(existing); return existing; }catch(e){} }
+  var d = {sections:SEED_SECTIONS.slice(),articles:[],banners:[],settings:[],pages:SEED_PAGES.slice(),posts:[],menu_version:4,seq:{articles:1,banners:1,posts:1,sections:7000}};
   Object.keys(SEED_SETTINGS).forEach(function(k){ d.settings.push({key:k,value:SEED_SETTINGS[k]}); });
   if(window.TN_SAMPLE && !localStorage.getItem("tn_nosample")){ addSample(d); }
   localStorage.setItem(KEY, JSON.stringify(d)); return d;
@@ -58,11 +58,16 @@ function migrateMenu(d){
 }
 function updateWelfareMenu(d){
   var mag=d.sections.find(function(s){return s.id===2001;});if(mag)mag.name="매거진";
-  if(!d.sections.some(function(s){return s.id===1113;}))d.sections.push({"id":1113,"parent_id":1001,"name":"하베스트은퇴.노후복지소식","code":"retirement-welfare","kind":"news","sort":3});
+  if(!d.sections.some(function(s){return s.id===1113;}))d.sections.push({"id":1113,"parent_id":1001,"name":"하베스트 은퇴.노후복지소식","code":"retirement-welfare","kind":"news","sort":3});
   d.menu_version=3;dsave(d);
 }
+function updateMemberMenu(d){
+  var welfare=d.sections.find(function(s){return s.id===1113;});if(welfare)welfare.name="하베스트 은퇴.노후복지소식";
+  var mission=d.sections.find(function(s){return s.id===3111;});if(mission)mission.name="선교소식";
+  d.menu_version=4;dsave(d);
+}
 function dsave(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
-TN.demoReset = function(){ localStorage.removeItem("tn_nosample"); localStorage.removeItem(KEY); localStorage.removeItem("tn_demo_auth"); };
+TN.demoReset = function(){ localStorage.removeItem("tn_nosample"); localStorage.removeItem(KEY); localStorage.removeItem("tn_demo_auth"); localStorage.removeItem("tn_member_demo_v1"); localStorage.removeItem("tn_member_session"); };
 function cmp(a,b){ return a<b?-1:a>b?1:0; }
 function match(row, k, expr){
   var v = row[k], i = expr.indexOf("."), op = expr.slice(0,i), a = expr.slice(i+1);
@@ -241,7 +246,63 @@ TN.seedSamples = async function(n){
     await TN.save("articles",{section_id:s.id,title:"샘플 기사 제목 "+i+": 이곳에 기사 제목이 들어갑니다",subtitle:"",summary:"샘플 요약문입니다. 관리자 화면에서 실제 기사로 바꾸거나 삭제하세요. 이 문장은 목록 화면의 요약 영역 모양을 확인하기 위한 것입니다.",body:"<p>샘플 본문 1단락입니다. 실제 기사를 작성하면 이 자리에 표시됩니다.</p><p>샘플 본문 2단락입니다.</p>",image_url:"",author:"편집국",status:"published",is_headline:i===1,is_top:i>1&&i<5,views:Math.floor(Math.random()*500),published_at:new Date(Date.now()-i*3600e3).toISOString()});
   }
 };
+TN.safeLink = function(s){if(!String(s||"").trim())return "";try{var u=new URL(String(s||""),location.href);return (u.protocol==="https:"||u.protocol==="http:")?u.href:"";}catch(e){return "";}};
 TN.esc = function(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); };
 TN.fmt = function(iso,full){ if(!iso) return ""; var d=new Date(iso),p=function(n){return String(n).padStart(2,"0");}; return (full?d.getFullYear()+"-":"")+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes()); };
+
+/* ---------- 회원·신청·승인 시연 전용 API ----------
+ * 실제 인증/권한은 서버 RLS로 구현해야 합니다. 이 데모는 보안 경계가 아닙니다.
+ * 기존 기사·설정 저장소와 회원 체험 저장소를 분리합니다.
+ */
+(function(){
+ var MK="tn_member_demo_v1", SK="tn_member_session";
+ function requireDemo(){if(!TN.demo)throw new Error("회원 인증·승인 서버 연결이 아직 완료되지 않았습니다. 관리자에게 문의하세요.");}
+ function store(){requireDemo();var d;try{d=JSON.parse(localStorage.getItem(MK)||"null");}catch(e){}return d||{members:[],applications:[],reviews:[],seq:1};}
+ function put(d){localStorage.setItem(MK,JSON.stringify(d));}
+ function clean(u){return u?{id:u.id,name:u.name,email:u.email,created_at:u.created_at}:null;}
+ function current(){requireDemo();var id=localStorage.getItem(SK);return clean(store().members.find(function(u){return u.id===id;}));}
+ function account(){var u=current();if(!u)throw new Error("먼저 회원 로그인을 해주세요.");return u;}
+ function text(s,min,max,label){s=String(s||"").trim();if(s.length<min||s.length>max)throw new Error(label+"은(는) "+min+"~"+max+"자로 입력해주세요.");return s;}
+ function kind(k){if(k!=="missionary"&&k!=="reporter")throw new Error("신청 유형을 확인해주세요.");return k;}
+ async function hash(pw,salt){if(!window.crypto||!crypto.subtle)throw new Error("보안 연결(HTTPS)에서 체험해주세요.");var key=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveBits"]);var bits=await crypto.subtle.deriveBits({name:"PBKDF2",hash:"SHA-256",salt:new TextEncoder().encode(salt),iterations:150000},key,256);return Array.from(new Uint8Array(bits)).map(function(b){return b.toString(16).padStart(2,"0");}).join("");}
+ var M=TN.member={
+  ready:function(){return TN.demo;},
+  enabledOAuth:function(){return [];},
+  current:async function(){if(!TN.demo)return null;return current();},
+  register:async function(row){
+   requireDemo();var name=text(row.name,2,40,"이름"),email=text(row.email,5,150,"이메일").toLowerCase(),pw=String(row.password||"");if(pw.length<8||pw.length>128)throw new Error("비밀번호는 8~128자로 입력해주세요.");
+   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw new Error("이메일 형식을 확인해주세요.");
+   var d=store();if(d.members.some(function(u){return u.email===email;}))throw new Error("이미 가입된 이메일입니다. 회원 로그인을 이용해주세요.");
+   var salt=crypto.randomUUID(), password_hash=await hash(pw,salt);d=store();if(d.members.some(function(u){return u.email===email;}))throw new Error("이미 가입된 이메일입니다.");
+   var u={id:crypto.randomUUID(),name:name,email:email,salt:salt,password_hash:password_hash,created_at:new Date().toISOString()};d.members.push(u);put(d);localStorage.setItem(SK,u.id);return clean(u);
+  },
+  login:async function(email,pw){requireDemo();var d=store(),u=d.members.find(function(u){return u.email===String(email||"").trim().toLowerCase();});if(!u||await hash(String(pw||""),u.salt)!==u.password_hash)throw new Error("이메일 또는 비밀번호를 확인해주세요.");localStorage.setItem(SK,u.id);return clean(u);},
+  logout:function(){localStorage.removeItem(SK);},
+  social:async function(){throw new Error("Google·카카오 간편가입은 인증 서버와 제공업체 설정을 연결한 뒤 사용할 수 있습니다. 현재는 데모 체험만 가능합니다.");},
+  applications:async function(){var u=account();return store().applications.filter(function(a){return a.user_id===u.id;});},
+  apply:async function(row){
+   var u=account(),k=kind(row.kind),org=text(row.organization,2,100,"소속"),region=text(row.region,1,100,"활동 지역"),intro=text(row.introduction,10,2000,"신청 소개"),d=store();
+   var old=d.applications.find(function(a){return a.user_id===u.id&&a.kind===k;});if(old&&old.status==="approved")throw new Error("이미 승인된 유형입니다. 글쓰기를 이용해주세요.");if(old&&old.status==="pending")throw new Error("이미 접수된 신청입니다. 관리자 승인을 기다려주세요.");
+   var a=Object.assign(old||{id:d.seq++,user_id:u.id},{kind:k,name:u.name,email:u.email,organization:org,region:region,introduction:intro,status:"pending",created_at:new Date().toISOString(),reviewed_at:null,review_note:""});if(!old)d.applications.push(a);put(d);return a;
+  },
+  canWrite:async function(k){requireDemo();var u=current();if(!u)return false;return store().applications.some(function(a){return a.user_id===u.id&&a.kind===k&&a.status==="approved";});},
+  submit:async function(row){
+   var u=account(),k=kind(row.kind);if(!await M.canWrite(k))throw new Error("관리자 승인을 받은 회원만 이 유형의 글을 작성할 수 있습니다.");
+   var title=text(row.title,5,150,"제목"),summary=text(row.summary,0,500,"요약"),body=text(row.body,20,20000,"본문");
+   var html=body.split(/\n{2,}/).map(function(p){return "<p>"+TN.esc(p).replace(/\n/g,"<br>")+"</p>";}).join("");
+   var existing=(await M.myArticles()).find(function(a){return a.title===title&&a.body===html&&Date.now()-new Date(a.created_at).getTime()<300000;});if(existing)throw new Error("같은 글이 이미 검토 요청되었습니다.");
+   return TN.save("articles",{section_id:k==="missionary"?3111:5111,title:title,subtitle:"",summary:summary,body:html,image_url:"",author:u.name,member_id:u.id,member_kind:k,member_submitted:true,status:"draft",is_headline:false,is_top:false,views:0,published_at:null});
+  },
+  myArticles:async function(){var u=account();return (await TN.list("articles",{filters:{member_id:"eq."+u.id},order:"created_at.desc"})).data||[];},
+  adminApplications:async function(){requireDemo();if(!await TN.isAdmin())throw new Error("관리자 권한이 필요합니다.");return store().applications.slice().sort(function(a,b){return b.id-a.id;});},
+  adminMembers:async function(){requireDemo();if(!await TN.isAdmin())throw new Error("관리자 권한이 필요합니다.");return store().members.map(clean);},
+  review:async function(id,status,note){
+   requireDemo();if(!await TN.isAdmin())throw new Error("관리자 권한이 필요합니다.");if(status!=="approved"&&status!=="rejected")throw new Error("처리 상태를 확인해주세요.");
+   var d=store(),a=d.applications.find(function(x){return x.id===Number(id);});if(!a)throw new Error("신청이 없습니다.");if(a.status!=="pending")throw new Error("이미 처리된 신청입니다. 목록을 새로고침해주세요.");
+   var now=new Date().toISOString();a.status=status;a.review_note=text(note,0,500,"검토 메모");a.reviewed_at=now;d.reviews.push({application_id:a.id,status:status,note:a.review_note,reviewed_at:now,reviewer:"demo-admin"});put(d);return a;
+  }
+ };
+})();
+
 TN.SEED_SECTIONS = SEED_SECTIONS; TN.SEED_SETTINGS = SEED_SETTINGS; TN.SEED_PAGES = SEED_PAGES;
 })();

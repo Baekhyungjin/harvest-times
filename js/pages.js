@@ -5,8 +5,19 @@ function secByCode(U,c){ return U.sections.filter(function(s){return s.code===c;
 function secSetting(U,key,fallbackCode){ var v=U.S[key]; return U.sections.filter(function(s){return String(s.id)===String(v);})[0] || secByCode(U,fallbackCode); }
 function clean(html){
   var d=new DOMParser().parseFromString(html||"","text/html");
-  [].forEach.call(d.querySelectorAll("script,iframe:not([src*='youtube']),object,embed,style"),function(n){n.remove();});
-  [].forEach.call(d.body.querySelectorAll("*"),function(n){ [].slice.call(n.attributes).forEach(function(a){ if(/^on/i.test(a.name)||/^javascript:/i.test(a.value)) n.removeAttribute(a.name); }); });
+  d.querySelectorAll("script,object,embed,style,link,meta,base,form,input,button,textarea,select,option,svg,math,template").forEach(function(n){n.remove();});
+  d.body.querySelectorAll("*").forEach(function(n){
+    if(n.tagName==="IFRAME"){
+      var u;try{u=new URL(n.getAttribute("src")||"",location.href);}catch(e){};
+      if(!u||u.protocol!=="https:"||["www.youtube.com","youtube.com","www.youtube-nocookie.com"].indexOf(u.hostname)<0||!/^\/embed\/[A-Za-z0-9_-]+$/.test(u.pathname)){n.remove();return;}
+      Array.from(n.attributes).forEach(function(a){n.removeAttribute(a.name);});n.src=u.href;n.setAttribute("sandbox","allow-scripts allow-same-origin allow-presentation");n.setAttribute("allow","encrypted-media; picture-in-picture; fullscreen");n.setAttribute("loading","lazy");n.setAttribute("title","YouTube 영상");return;
+    }
+    Array.from(n.attributes).forEach(function(a){
+      if(["href","src","alt","title","target","rel","colspan","rowspan","width","height","loading"].indexOf(a.name)<0){n.removeAttribute(a.name);return;}
+      if(a.name==="href"||a.name==="src"){var safe=false;try{var u=new URL(a.value,location.href);safe=u.protocol==="https:"||u.protocol==="http:";}catch(e){}if(a.name==="src"&&n.tagName==="IMG"&&/^data:image\/(jpeg|png|webp|gif);base64,/i.test(a.value))safe=true;if(!safe)n.removeAttribute(a.name);}
+      if(a.name==="target"&&a.value!=="_blank")n.removeAttribute(a.name);
+    });if(n.tagName==="A")n.setAttribute("rel","noopener noreferrer");
+  });
   return d.body.innerHTML;
 }
 function item(U,a){ return '<a class="li" href="'+(a?U.artUrl(a):"#")+'"><div class="thumb'+(a&&a.image_url?"":" sk")+'" style="flex:0 0 120px;aspect-ratio:3/2">'+(a&&a.image_url?'<img src="'+E(a.image_url)+'" alt="" loading="lazy">':"")+'</div><h4>'+U.title(a)+'</h4></a>'; }
@@ -98,7 +109,8 @@ async function list(U){
   document.getElementById("app").innerHTML='<div class="wrap"><div class="cols"><main><div class="ph-head"><h1>'+name+'</h1><small>총 <b>'+total+'</b>건의 기사가 있습니다.</small><div class="views"><button data-v="list" title="제목형">&#9776;</button><button data-v="sm" title="요약형">&#9638;</button><button data-v="grid" title="갤러리형">&#9707;</button></div></div><div class="'+(view==="grid"?"grid3":view==="list"?"compact":"")+'">'+body+'</div><div class="pager">'+pager+'</div></main>'+(await U.sidebar())+'</div></div>';
   var intro='';
   if(children.length)intro+='<nav class="section-chips" aria-label="하위 카테고리">'+children.map(function(s){return '<a href="'+E(U.secUrl(s))+'">'+E(s.name)+'</a>';}).join('')+'</nav>';
-  if(isNetwork)intro+='<div class="section-note"><strong>선교의 소식을 후원자에게 전하세요</strong><p>파송선교사 현장 소식의 링크를 복사해 카카오톡·문자·이메일로 나누세요. 개인 정보와 사역지 보안은 편집국에서 확인 후 발행합니다.</p></div>';
+  if(isNetwork)intro+='<div class="section-note"><strong>선교의 소식을 후원자에게 전하세요</strong><p>파송선교사 현장 소식의 링크를 복사해 카카오톡·문자·이메일로 나누세요. 개인 정보와 사역지 보안은 편집국에서 확인 후 발행합니다. 관리자에게 승인받은 선교사만 글을 작성할 수 있습니다.</p><p><a class="btn" href="member.html?mode=apply&amp;kind=missionary">선교사 신청</a> <a class="btn" href="member.html?mode=write">선교소식 작성</a></p></div>';
+  if(sec&&sec.id===5111)intro+='<div class="section-note"><strong>하베스트 독자 기자단</strong><p>기자단을 신청하고 관리자의 승인을 받은 뒤 기고할 수 있습니다. 작성한 글은 편집국 검토 후 발행됩니다.</p><a class="btn" href="member.html?mode=apply&amp;kind=reporter">기자단 신청</a> <a class="btn" href="member.html?mode=write">기고 작성</a></div>';
   if(isArchive)intro+='<div class="section-note"><strong>역대 발행호 아카이브</strong><p>PDF 파일 또는 이북 주소를 등록하면 보기 버튼이 표시됩니다. 현재 예시는 하베스트대학교 원문 발행호 페이지로 연결됩니다.</p></div>';
   document.querySelector('.ph-head').insertAdjacentHTML('afterend',intro);
   if(isArchive)document.querySelector('.views').hidden=true;
@@ -109,6 +121,7 @@ async function list(U){
 /* ---------------- 기사 ---------------- */
 async function article(U){
   var id=U.q("id"), a=id?await TN.get("articles","id",id):null;
+  if(a&&a.status!=="published"&&!await TN.isAdmin())a=null;
   if(!a){ document.getElementById("app").innerHTML='<div class="wrap" style="padding:80px 0;text-align:center"><h2>기사를 찾을 수 없습니다.</h2><p><a class="btn" href="index.html">홈으로</a></p></div>'; return; }
   var sec=U.sections.filter(function(s){return s.id===a.section_id;})[0];
   var rel=(await TN.published({section_id:"eq."+a.section_id,id:"neq."+a.id},{limit:5})).data||[];
@@ -138,13 +151,13 @@ async function article(U){
 /* ---------------- 게시판/제보/문의 ---------------- */
 var BOARDS={free:{t:"자유게시판",pub:true},reporter:{t:"독자기자",pub:true},report:{t:"기사제보",pub:false},ad:{t:"광고문의",pub:false}};
 async function board(U){
-  var b=U.q("b")||"free", cfg=BOARDS[b]; if(!cfg){ cfg={t:b,pub:true}; }
+  var b=U.q("b")||"free"; if(!Object.prototype.hasOwnProperty.call(BOARDS,b))b="free"; var cfg=BOARDS[b];
   var id=U.q("id"), write=U.q("write")==="1"||!cfg.pub, pg=parseInt(U.q("p")||"1",10), size=15;
   var app=document.getElementById("app");
   function shell(inner){ app.innerHTML='<div class="wrap"><div class="cols"><main><div class="ph-head"><h1>'+E(cfg.t)+'</h1></div>'+inner+'</main><aside class="side">'+U.ad("side_1","sq")+U.ad("side_2","tall")+'</aside></div></div>'; }
   if(id){
     var p=await TN.get("posts","id",id);
-    if(!p){ shell('<p style="padding:60px 0;text-align:center">글을 찾을 수 없습니다.</p>'); return; }
+    if(!p||p.board!==b||((!cfg.pub||p.status==="hidden")&&!await TN.isAdmin())){ shell('<p style="padding:60px 0;text-align:center">글을 찾을 수 없습니다.</p>'); return; }
     shell('<div style="padding:24px 0;border-bottom:1px solid var(--line)"><h2 style="margin:0 0 10px">'+E(p.title)+'</h2><div class="meta"><span>'+E(p.author||"")+'</span><span>'+TN.fmt(p.created_at,true)+'</span></div></div><div class="page-body" style="padding:28px 0">'+E(p.body)+'</div><a class="btn line" href="board.html?b='+b+'">목록</a>');
     return;
   }
@@ -168,7 +181,7 @@ async function board(U){
 
 /* ---------------- 고정 페이지 ---------------- */
 async function page(U){
-  var slug=U.q("slug")||"about", p=await TN.get("pages","slug",slug);
+  var slug=U.q("slug")||"about"; if(slug==="join"){location.replace("member.html?mode=join");return;} var p=await TN.get("pages","slug",slug);
   document.title=(p?p.title:"")+" - "+U.S.site_name;
   document.getElementById("app").innerHTML='<div class="wrap narrow"><div class="ph-head"><h1>'+E(p?p.title:"페이지를 찾을 수 없습니다")+'</h1></div><div class="page-body" style="padding:28px 0">'+E(p?p.body:"").replace(/https?:\/\/[^\s<>]+/g,function(u){return '<a href="'+u+'" target="_blank" rel="noopener">'+u+'</a>';})+'</div></div>';
 }
