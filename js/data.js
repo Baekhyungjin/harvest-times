@@ -4,176 +4,7 @@ var LIVE = !!(C.SUPABASE_URL && C.SUPABASE_ANON_KEY);
 var TN = window.TN = { live: LIVE, demo: !LIVE };
 
 /* ---------- 기본 데이터(메뉴 구조) ---------- */
-var SEED_SECTIONS = [
- {
-  "id": 1001,
-  "parent_id": null,
-  "name": "뉴스",
-  "code": "news",
-  "kind": "news",
-  "sort": 1
- },
- {
-  "id": 1111,
-  "parent_id": 1001,
-  "name": "하베스트 대학소식 (공지 / 행사)",
-  "code": "univ-news",
-  "kind": "news",
-  "sort": 1
- },
- {
-  "id": 1112,
-  "parent_id": 1001,
-  "name": "하베스트 강의소식",
-  "code": "lectures",
-  "kind": "news",
-  "sort": 2
- },
- {
-  "id": 2001,
-  "parent_id": null,
-  "name": "매거진 (웹진)",
-  "code": "magazine",
-  "kind": "news",
-  "sort": 2
- },
- {
-  "id": 2111,
-  "parent_id": 2001,
-  "name": "커버스토리 / 특집",
-  "code": "cover-story",
-  "kind": "news",
-  "sort": 1
- },
- {
-  "id": 2112,
-  "parent_id": 2001,
-  "name": "선교 현장 리포트 & 인터뷰",
-  "code": "field-report",
-  "kind": "news",
-  "sort": 2
- },
- {
-  "id": 2113,
-  "parent_id": 2001,
-  "name": "포토스케치",
-  "code": "photo-sketch",
-  "kind": "photo",
-  "sort": 3
- },
- {
-  "id": 2114,
-  "parent_id": 2001,
-  "name": "PDF / 이북 보기",
-  "code": "archive",
-  "kind": "news",
-  "sort": 4
- },
- {
-  "id": 3001,
-  "parent_id": null,
-  "name": "선교 네트워크",
-  "code": "mission-network",
-  "kind": "news",
-  "sort": 3
- },
- {
-  "id": 3111,
-  "parent_id": 3001,
-  "name": "파송선교사 현장 소식",
-  "code": "mission-updates",
-  "kind": "news",
-  "sort": 1
- },
- {
-  "id": 3112,
-  "parent_id": 3001,
-  "name": "선교단체 협력 행사 소식",
-  "code": "partner-events",
-  "kind": "news",
-  "sort": 2
- },
- {
-  "id": 4001,
-  "parent_id": null,
-  "name": "칼럼",
-  "code": "columns",
-  "kind": "news",
-  "sort": 4
- },
- {
-  "id": 4111,
-  "parent_id": 4001,
-  "name": "교수·학자 칼럼",
-  "code": "scholar-column",
-  "kind": "news",
-  "sort": 1
- },
- {
-  "id": 4112,
-  "parent_id": 4001,
-  "name": "목회자 칼럼",
-  "code": "pastor-column",
-  "kind": "news",
-  "sort": 2
- },
- {
-  "id": 4113,
-  "parent_id": 4001,
-  "name": "선교사 칼럼",
-  "code": "missionary-column",
-  "kind": "news",
-  "sort": 3
- },
- {
-  "id": 5001,
-  "parent_id": null,
-  "name": "독자 미디어",
-  "code": "reader-media",
-  "kind": "news",
-  "sort": 5
- },
- {
-  "id": 5111,
-  "parent_id": 5001,
-  "name": "임명된 독자 기자단 기고",
-  "code": "appointed-reporters",
-  "kind": "news",
-  "sort": 1
- },
- {
-  "id": 5112,
-  "parent_id": 5001,
-  "name": "기사 제보 및 참여",
-  "code": "report",
-  "kind": "board",
-  "sort": 2
- },
- {
-  "id": 6001,
-  "parent_id": null,
-  "name": "타임 TV",
-  "code": "time-tv",
-  "kind": "news",
-  "sort": 6
- },
- {
-  "id": 6111,
-  "parent_id": 6001,
-  "name": "하베스트 영상 / 브이로그",
-  "code": "harvest-video",
-  "kind": "video",
-  "sort": 1
- },
- {
-  "id": 6112,
-  "parent_id": 6001,
-  "name": "후원 안내 및 참여하기",
-  "code": "support",
-  "kind": "page",
-  "sort": 2
- }
-];
+var SEED_SECTIONS = [{"id":1001,"parent_id":null,"name":"뉴스","code":"news","kind":"news","sort":1},{"id":1111,"parent_id":1001,"name":"하베스트 대학소식 (공지 / 행사)","code":"univ-news","kind":"news","sort":1},{"id":1112,"parent_id":1001,"name":"하베스트 강의소식","code":"lectures","kind":"news","sort":2},{"id":1113,"parent_id":1001,"name":"하베스트은퇴.노후복지소식","code":"retirement-welfare","kind":"news","sort":3},{"id":2001,"parent_id":null,"name":"매거진","code":"magazine","kind":"news","sort":2},{"id":2111,"parent_id":2001,"name":"커버스토리 / 특집","code":"cover-story","kind":"news","sort":1},{"id":2112,"parent_id":2001,"name":"선교 현장 리포트 & 인터뷰","code":"field-report","kind":"news","sort":2},{"id":2113,"parent_id":2001,"name":"포토스케치","code":"photo-sketch","kind":"photo","sort":3},{"id":2114,"parent_id":2001,"name":"PDF / 이북 보기","code":"archive","kind":"news","sort":4},{"id":3001,"parent_id":null,"name":"선교 네트워크","code":"mission-network","kind":"news","sort":3},{"id":3111,"parent_id":3001,"name":"파송선교사 현장 소식","code":"mission-updates","kind":"news","sort":1},{"id":3112,"parent_id":3001,"name":"선교단체 협력 행사 소식","code":"partner-events","kind":"news","sort":2},{"id":4001,"parent_id":null,"name":"칼럼","code":"columns","kind":"news","sort":4},{"id":4111,"parent_id":4001,"name":"교수·학자 칼럼","code":"scholar-column","kind":"news","sort":1},{"id":4112,"parent_id":4001,"name":"목회자 칼럼","code":"pastor-column","kind":"news","sort":2},{"id":4113,"parent_id":4001,"name":"선교사 칼럼","code":"missionary-column","kind":"news","sort":3},{"id":5001,"parent_id":null,"name":"독자 미디어","code":"reader-media","kind":"news","sort":5},{"id":5111,"parent_id":5001,"name":"임명된 독자 기자단 기고","code":"appointed-reporters","kind":"news","sort":1},{"id":5112,"parent_id":5001,"name":"기사 제보 및 참여","code":"report","kind":"board","sort":2},{"id":6001,"parent_id":null,"name":"타임 TV","code":"time-tv","kind":"news","sort":6},{"id":6111,"parent_id":6001,"name":"하베스트 영상 / 브이로그","code":"harvest-video","kind":"video","sort":1},{"id":6112,"parent_id":6001,"name":"후원 안내 및 참여하기","code":"support","kind":"page","sort":2}];
 var SEED_SETTINGS = {
  site_name:"하베스트 타임스", site_en:"HARVEST TIMES", tagline:"",
  address:"[주소 입력]", phone:"[대표전화 입력]", youth_officer:"[청소년보호책임자 입력]",
@@ -206,8 +37,8 @@ TN.BANNER_SLOTS = [
 var KEY = "tn_demo_v1";
 function dload(){
   var s = localStorage.getItem(KEY);
-  if(s){ try{ var existing=JSON.parse(s); if(existing.menu_version!==2) migrateMenu(existing); return existing; }catch(e){} }
-  var d = {sections:SEED_SECTIONS.slice(),articles:[],banners:[],settings:[],pages:SEED_PAGES.slice(),posts:[],menu_version:2,seq:{articles:1,banners:1,posts:1,sections:7000}};
+  if(s){ try{ var existing=JSON.parse(s); if(!existing.menu_version||existing.menu_version<2) migrateMenu(existing); if(existing.menu_version<3) updateWelfareMenu(existing); return existing; }catch(e){} }
+  var d = {sections:SEED_SECTIONS.slice(),articles:[],banners:[],settings:[],pages:SEED_PAGES.slice(),posts:[],menu_version:3,seq:{articles:1,banners:1,posts:1,sections:7000}};
   Object.keys(SEED_SETTINGS).forEach(function(k){ d.settings.push({key:k,value:SEED_SETTINGS[k]}); });
   if(window.TN_SAMPLE && !localStorage.getItem("tn_nosample")){ addSample(d); }
   localStorage.setItem(KEY, JSON.stringify(d)); return d;
@@ -224,6 +55,11 @@ function migrateMenu(d){
   (d.articles||[]).forEach(function(a){if(map[a.section_id])a.section_id=map[a.section_id];});
   Object.keys(defs).forEach(function(k){ var row=d.settings.find(function(x){return x.key===k;}); if(row)row.value=defs[k]; else d.settings.push({key:k,value:defs[k]}); });
   d.seq.sections=Math.max(7000,d.seq.sections||0); d.menu_version=2; dsave(d);
+}
+function updateWelfareMenu(d){
+  var mag=d.sections.find(function(s){return s.id===2001;});if(mag)mag.name="매거진";
+  if(!d.sections.some(function(s){return s.id===1113;}))d.sections.push({"id":1113,"parent_id":1001,"name":"하베스트은퇴.노후복지소식","code":"retirement-welfare","kind":"news","sort":3});
+  d.menu_version=3;dsave(d);
 }
 function dsave(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
 TN.demoReset = function(){ localStorage.removeItem("tn_nosample"); localStorage.removeItem(KEY); localStorage.removeItem("tn_demo_auth"); };
