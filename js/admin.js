@@ -16,8 +16,8 @@ function toLocal(iso){ var d=iso?new Date(iso):new Date(); var p=function(n){ret
 /* ---------- 로그인 ---------- */
 function loginView(msg){
   document.body.className="login";
-  app.innerHTML='<div class="lbox"><h1>'+E(TN.demo?"하베스트 타임스 관리자 (데모)":"하베스트 타임스 관리자")+'</h1>'+(TN.demo?'<p class="hint">데모 모드입니다. ID <b>admin</b> / 비밀번호 <b>demo1234</b></p>':'')+
-   '<form id="lf"><label>ID</label><input name="id" autocomplete="username" required><label>비밀번호</label><input name="pw" type="password" autocomplete="current-password" required><button class="b">로그인</button><p class="err">'+E(msg||"")+'</p></form><p><a href="index.html">사이트로 돌아가기</a></p></div>';
+  app.innerHTML='<div class="lbox"><h1>'+E(TN.demo?"하베스트 타임스 관리자 (데모)":"하베스트 타임스 관리자")+'</h1>'+(TN.demo?'<p class="hint">시연용 화면입니다. 실제 서버 데이터와 분리됩니다.</p>':'')+
+   '<form id="lf"><label>ID</label><input name="id" autocomplete="username" value="admin" required><label>비밀번호</label><input name="pw" type="password" autocomplete="current-password" required><button class="b">로그인</button><p class="err">'+E(msg||"")+'</p></form><p><a href="index.html">사이트로 돌아가기</a></p></div>';
   $("#lf").onsubmit=async function(e){ e.preventDefault(); var f=new FormData(e.target); var r=await TN.signIn(f.get("id").trim(),f.get("pw")); if(r.ok) start(); else $(".err").textContent=r.msg; };
 }
 

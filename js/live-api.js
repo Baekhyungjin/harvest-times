@@ -107,7 +107,8 @@ TN.isAdmin = async function () { await ready(); if (!authUser) return false; ret
 TN.signIn = async function (id,pw) {
   try {
     await ready(); var email = String(id || '').trim();
-    if (!email.includes('@')) return {ok:false,msg:'관리자 계정의 실제 이메일 주소를 입력해 주세요.'};
+    if (email.toLowerCase() === 'admin') email = 'admin@harvest-times.invalid';
+    if (!email.includes('@')) return {ok:false,msg:'관리자 아이디 또는 가입 이메일을 입력해 주세요.'};
     var r = await run(client.auth.signInWithPassword({email:email,password:String(pw || '')}), true); cacheUser(r.data && r.data.user);
     if (!await TN.isAdmin()) return {ok:false,msg:'회원 로그인은 완료되었습니다. 계정 관리 권한은 없으니 편집실을 이용해 주세요.'};
     return {ok:true};
