@@ -22,16 +22,18 @@ function loginView(msg){
 }
 
 /* ---------- 틀 ---------- */
-var NAV=[["dash","대시보드"],["articles","기사 관리"],["edit/new","기사 작성"],["sections","메뉴·섹션"],["banners","배너"],["inbox","접수함"],["applications","선교사·기자단 승인"],["pages","고정 페이지"],["settings","사이트 설정"]];
+var NAV=[["dash","대시보드"],["articles","기사 관리"],["edit/new","편집실 기사 작성"],["members","회원·권한 관리"],["sections","메뉴·섹션"],["banners","배너"],["inbox","접수함"],["applications","선교사·기자단 승인"],["pages","고정 페이지"],["settings","사이트 설정"]];
 async function start(){
   document.body.className="";
   secs=await TN.sections();
   app.innerHTML='<div class="shell"><nav><div class="brand">관리자</div>'+NAV.map(function(n){return '<a href="#/'+n[0]+'" data-r="'+n[0].split("/")[0]+'">'+n[1]+'</a>';}).join("")+'<a href="index.html" target="_blank" class="ext">사이트 보기 &#8599;</a><a href="#" id="out" class="ext">로그아웃</a></nav><section id="main"></section></div>';
-  $("#out").onclick=function(e){e.preventDefault();TN.signOut();loginView();};
+  $("#out").onclick=function(e){e.preventDefault();Promise.resolve(TN.signOut()).then(function(){loginView();});};
   window.onhashchange=route; route();
 }
 async function route(){
   var h=(location.hash||"#/dash").slice(2).split("/"), r=h[0];
+  if(TN.live&&(r==="articles"||r==="edit")){location.replace(r==="edit"?(h[1]==="new"?"editor.html#/new":"editor.html?article="+encodeURIComponent(h[1])+"#/new"):"editor.html#/mine");return;}
+  if(TN.live&&r==="members"){location.replace("editor.html#/members");return;}
   [].forEach.call(document.querySelectorAll("nav a[data-r]"),function(a){a.classList.toggle("on",a.dataset.r===r);});
   var m=$("#main"); m.innerHTML='<p class="muted">불러오는 중...</p>';
   try{ await (VIEWS[r]||VIEWS.dash)(m,h[1]); }catch(e){ m.innerHTML='<div class="card"><b>오류</b><p>'+E(e.message)+'</p></div>'; }
@@ -45,7 +47,7 @@ VIEWS.dash=async function(m){
   var rec=(await TN.list("articles",{order:"created_at.desc",limit:8})).data||[];
   m.innerHTML='<h2>대시보드</h2><div class="stats"><div class="card"><small>발행된 기사</small><b>'+(pub.count||0)+'</b></div><div class="card"><small>임시저장</small><b>'+(dr.count||0)+'</b></div><div class="card"><small>미확인 접수</small><b>'+(inb.count||0)+'</b></div></div>'+
    '<div class="card"><h3>최근 기사</h3>'+(rec.length?'<table>'+rec.map(function(a){return '<tr><td><a href="#/edit/'+a.id+'">'+E(a.title)+'</a></td><td>'+E(secName(a.section_id))+'</td><td>'+(a.status==="published"?"발행":"임시")+'</td></tr>';}).join("")+'</table>':'<p class="muted">아직 기사가 없습니다. "기사 작성"에서 첫 기사를 등록하세요.</p>')+'</div>'+
-   (TN.hasSample()?'<div class="card"><h3>예시 데이터 (하베스트대학교 공개 내용 기반)</h3><p class="muted">예시 기사 29건, 광고 배너 8개, 접수 예시 5건입니다. 실제 운영 전에 "예시 데이터 지우기"로 삭제하세요. 지워도 직접 만든 기사는 남습니다.</p><button class="b" id="ldS">예시 데이터 넣기</button> <button class="b line" id="clS">예시 데이터 지우기</button></div>':'')+(TN.demo?'<div class="card"><h3>데모 도구</h3><p class="muted">레이아웃 확인용입니다. 실제 서버(Supabase) 연결 시에는 이 버튼이 데이터를 만들지 않도록 사용하지 마세요.</p><button class="b" id="seed">샘플 기사 24개 만들기</button> <button class="b line" id="rst">데모 데이터 모두 지우기</button></div>':'');
+   (TN.demo&&TN.hasSample()?'<div class="card"><h3>예시 데이터 (하베스트대학교 공개 내용 기반)</h3><p class="muted">예시 기사 29건, 광고 배너 8개, 접수 예시 5건입니다. 실제 운영 전에 "예시 데이터 지우기"로 삭제하세요. 지워도 직접 만든 기사는 남습니다.</p><button class="b" id="ldS">예시 데이터 넣기</button> <button class="b line" id="clS">예시 데이터 지우기</button></div>':'')+(TN.demo?'<div class="card"><h3>데모 도구</h3><p class="muted">레이아웃 확인용입니다. 실제 서버(Supabase) 연결 시에는 이 버튼이 데이터를 만들지 않도록 사용하지 마세요.</p><button class="b" id="seed">샘플 기사 24개 만들기</button> <button class="b line" id="rst">데모 데이터 모두 지우기</button></div>':'');
   if($("#ldS")){ $("#ldS").onclick=async function(){ this.disabled=true; try{ await TN.loadSample(); toast("예시 데이터를 넣었습니다."); route(); }catch(e){ toast(e.message,1); } }; $("#clS").onclick=async function(){ if(!confirm("예시 기사, 배너, 접수를 지울까요?"))return; await TN.clearSample(); toast("지웠습니다."); route(); }; }
   if(TN.demo){ $("#seed").onclick=async function(){ await TN.seedSamples(24); toast("샘플 기사를 만들었습니다."); route(); }; $("#rst").onclick=function(){ if(confirm("이 브라우저의 데모 기사·설정·회원·신청·승인 기록을 모두 지우고 로그아웃할까요?")){ TN.demoReset(); location.reload(); } }; }
 };
@@ -156,7 +158,7 @@ VIEWS.pages=async function(m){
 /* ---------- 사이트 설정 ---------- */
 VIEWS.settings=async function(m){
   var S=await TN.settings();
-  var T=[["site_name","사이트 이름"],["site_en","영문 이름(로고 아래)"],["address","주소"],["phone","대표전화"],["youth_officer","청소년보호책임자"],["reg_title","제호"],["reg_no","등록번호"],["reg_date","등록일"],["publisher","발행·편집인"],["copyright","저작권 문구"]];
+  var T=[["site_name","사이트 이름"],["site_en","영문 이름(로고 아래)"],["address","주소"],["phone","대표전화"],["youth_officer","청소년보호책임자"],["reg_title","제호"],["reg_no","등록번호"],["reg_date","등록일"],["publisher","발행인"],["editor_in_chief","편집인"],["copyright","저작권 문구"]];
   var secsTop=secs.filter(function(s){return s.kind!=="board"&&s.kind!=="page"});
   var sel=function(k,label){ return '<div><label>'+label+'</label><select name="'+k+'"><option value="">(기본값)</option>'+secOptions(S[k])+'</select></div>'; };
   m.innerHTML='<h2>사이트 설정</h2><form class="card form" id="stf"><h3>기본 정보 (푸터에 표시)</h3>'+T.map(function(t){return '<label>'+t[1]+'</label><input name="'+t[0]+'" value="'+E(S[t[0]]||"")+'">';}).join("")+
@@ -185,5 +187,5 @@ VIEWS.applications=async function(m){
 };
 
 /* ---------- 시작 ---------- */
-(async function(){ if(TN.user() && await TN.isAdmin()) start(); else loginView(); })();
+(async function(){ if(TN.ready)await TN.ready; if(TN.user() && await TN.isAdmin()) start(); else loginView(); })();
 })();

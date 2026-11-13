@@ -7,6 +7,7 @@ if(!window.TNUI||typeof TNUI.boot!=="function"){
   return;
 }
 
+if(new URLSearchParams(location.search).get("mode")==="write"){location.replace("editor.html#/new");return;}
 var MODES=["join","login","apply","write","account"];
 var LABEL={join:"회원가입",login:"로그인",apply:"선교사·기자단 신청",write:"글쓰기",account:"마이페이지"};
 var LEAD={
@@ -169,12 +170,12 @@ function viewJoin(ctx){
     field({name:"password",label:"비밀번호",type:"password",required:true,auto:"new-password",hint:"8자 이상 입력해 주세요.",max:100})+
     field({name:"confirm",label:"비밀번호 확인",type:"password",required:true,auto:"new-password",max:100})+
     (TN.demo?'<div class="member-field"><label class="member-check" for="member-f-demoOk"><input type="checkbox" id="member-f-demoOk" name="demoOk" aria-describedby="member-f-demoOk-err" data-testid="field-demoOk"><span>'+E(DEMO_CONFIRM)+'<span class="member-req" aria-hidden="true"> *</span><span class="member-sr"> (필수)</span></span></label><p class="member-err" id="member-f-demoOk-err" data-err-for="demoOk"></p></div>':
-      '<p class="member-hint">이용약관과 개인정보처리방침은 현재 임시 안내 문서입니다. 가입 동의를 대신하지 않습니다.</p>')+
+      '<p class="member-hint">운영 준비 단계로 현재는 편집 관계자의 시험 가입만 진행합니다. 정식 회원 모집 전 이용약관·개인정보처리방침 확정이 필요합니다.</p>')+
     '<div class="member-actions"><button type="submit" class="member-btn" data-testid="join-submit">회원가입</button><a class="member-btn is-ghost" href="'+url("login")+'">이미 계정이 있어요</a></div>'+
     statusBox()+'</fieldset></form>'+
     '<div class="member-divider">간편가입</div>'+
     '<div class="member-social" role="group" aria-label="간편가입">'+soc("google","Google")+soc("kakao","카카오")+'</div>'+
-    '<p class="member-hint" data-testid="oauth-note">'+(oauth.length&&ctx.ready?'간편가입은 외부 인증 화면에서 진행됩니다.':'간편가입은 인증 서버가 연결된 뒤에만 사용할 수 있습니다. 지금은 이메일 가입도 이 브라우저 안의 데모 체험으로만 가능합니다.')+'</p>'+
+    '<p class="member-hint" data-testid="oauth-note">'+(oauth.length&&ctx.ready?'간편가입은 외부 인증 화면에서 진행됩니다.':'간편가입은 인증 서버가 연결된 뒤에만 사용할 수 있습니다. 이메일 가입은 메일 인증 후 이용할 수 있습니다. Google·카카오 간편가입은 제공업체 연결 전입니다.')+'</p>'+
     (TN.demo?'<div class="member-divider">데모 체험</div>'+
       '<div data-testid="demo-account-box"><p>입력 없이 체험하려면 임시 체험 계정을 만들 수 있습니다. 이 브라우저에만 저장되는 시험용 계정입니다.</p>'+
       '<button type="button" class="member-btn is-gold" id="member-demo-btn" data-testid="demo-account-btn">데모 체험계정 만들기</button>'+
@@ -252,7 +253,7 @@ function viewAccount(ctx){
   var canW=ctx.writable.length>0;
   return '<section class="member-card" aria-labelledby="member-acc-h"><h2 id="member-acc-h">내 정보</h2>'+
     '<p><b>'+E(u.name||"이름 없음")+'</b> · '+E(u.email||"")+'</p>'+
-    '<div class="member-actions"><a class="member-btn is-gold" href="'+url("apply")+'">선교사·기자단 신청</a>'+
+    '<div class="member-actions">'+(TN.live?'<a class="member-btn" href="editor.html">편집실 열기</a>':'')+'<a class="member-btn is-gold" href="'+url("apply")+'">선교사·기자단 신청</a>'+ 
     (canW?'<a class="member-btn" href="'+url("write")+'" data-testid="goto-write">글쓰기</a>':'<span class="member-hint" data-testid="write-locked">승인된 유형이 생기면 글쓰기가 열립니다.</span>')+'</div>'+
     (ctx.loadError?'<div class="member-status is-error" role="status" aria-live="assertive" data-testid="account-error">'+E(ctx.loadError)+'</div>':'')+'</section>'+
     '<div class="member-grid"><section class="member-card" aria-labelledby="member-apps-h"><h2 id="member-apps-h">내 신청</h2>'+appsHtml+'</section>'+
@@ -273,7 +274,8 @@ function bindJoin(root,ctx){
       return e;
     },async function(f){
       var email=val(f,"email").trim(), pw=val(f,"password");
-      await ctx.m.register({name:val(f,"name").trim(),email:email,password:pw});
+      var signupResult=await ctx.m.register({name:val(f,"name").trim(),email:email,password:pw});
+      if(signupResult&&signupResult.requiresConfirmation){f.elements.password.value="";f.elements.confirm.value="";setStatus(f.querySelector('[data-role="status"]'),"이메일 인증이 필요합니다. 수신함의 확인 링크를 누른 뒤 로그인해주세요. 메일이 오지 않으면 관리자에게 문의해주세요.","info");f.querySelector('button[type="submit"]').setAttribute("data-locked","1");return;}
       await ensureSession(ctx,email,pw);
       f.elements.password.value="";f.elements.confirm.value="";
       location.assign(url("account","join"));
@@ -406,8 +408,7 @@ TNUI.boot(null,async function(U){
     ub.className="member-userbar";
     ub.innerHTML='<span data-testid="current-user"><b>'+E(ctx.user.name||ctx.user.email||"회원")+'</b>님 로그인 중</span><button type="button" class="member-btn is-ghost is-small" id="member-logout" data-testid="logout-btn">로그아웃</button>';
     root.querySelector("#member-logout").addEventListener("click",function(){
-      try{ m.logout(); }catch(e){}
-      location.assign(url("login","logout"));
+      Promise.resolve(m.logout()).then(function(){location.assign(url("login","logout"));}).catch(function(e){alert(errMsg(e));});
     });
   }
 

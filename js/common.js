@@ -3,6 +3,8 @@ var E = TN.esc;
 var U = window.TNUI = {};
 U.q = function(k){ return new URLSearchParams(location.search).get(k); };
 U.secUrl = function(s){
+  if(s.id===7001||s.id===7111)return "mall.html?view=mall";
+  if(s.id===7112)return "mall.html?view=pension";
   if(s.kind==="board") return "board.html?b="+encodeURIComponent(s.code)+"&s="+s.id;
   if(s.kind==="page") return "page.html?slug="+encodeURIComponent(s.code);
   if(s.kind==="link"&&s.link_url) return TN.safeLink(s.link_url)||"#";
@@ -33,7 +35,7 @@ U.header = function(active){
   var d=new Date(), wk="일월화수목금토"[d.getDay()], p=function(n){return String(n).padStart(2,"0");};
   var date = "오늘: "+d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes())+" ("+wk+")";
   var logo = S.logo_url ? '<img src="'+E(S.logo_url)+'" alt="'+E(S.site_name)+'">' : '<b>'+E(S.site_name.replace(/ ?전자신문/,"")||S.site_name)+'</b><small>'+E(S.site_en)+'</small>';
-  var h = '<div class="top"><div class="wrap"><div class="l"><a href="board.html?b=report&write=1">기사제보</a><a href="board.html?b=ad&write=1">광고문의</a><a href="member.html?mode=apply">기자단·선교사 신청</a></div>'+
+  var h = '<div class="top"><div class="wrap"><div class="l"><a href="board.html?b=report&write=1">기사제보</a><a href="board.html?b=ad&write=1">광고문의</a><a href="member.html?mode=apply">기자단·선교사 신청</a><a href="editor.html">편집실</a><a href="organization.html">조직도</a></div>'+
     '<div class="r"><span>'+date+'</span><a href="member.html?mode=login" id="member-login-link">로그인</a><a href="member.html?mode=join" id="member-signup-link">회원가입</a></div></div></div>'+
     '<div class="logoarea"><div class="wrap"><div class="tb">'+U.ad("top_left")+'</div><a class="logo" href="index.html">'+logo+'</a></div></div>'+
     '<div class="gnb"><div class="wrap"><button class="ham" aria-label="전체메뉴"><i></i></button><ul class="m">'+
@@ -56,19 +58,19 @@ U.header = function(active){
 };
 U.footer = function(){
   var S=U.S;
-  var links=[["매체소개","about"],["기사제보","@report"],["광고문의","@ad"],["기자단·선교사 신청","@member"],["이용약관","terms"],["개인정보처리방침","privacy","pp"],["청소년보호정책","youth"],["저작권보호정책","copyright"],["이메일무단수집거부","email"]];
+  var links=[["매체소개","about"],["조직도","@organization"],["관리자 사용법","@guide"],["기사제보","@report"],["광고문의","@ad"],["기자단·선교사 신청","@member"],["이용약관","terms"],["개인정보처리방침","privacy","pp"],["청소년보호정책","youth"],["저작권보호정책","copyright"],["이메일무단수집거부","email"]];
   var logo = S.logo_url ? '<img src="'+E(S.logo_url)+'" alt="">' : '<b>'+E(S.site_name.replace(/ ?전자신문/,"")||S.site_name)+'</b><small>'+E(S.site_en)+'</small>';
   document.getElementById("ftr").innerHTML = '<div class="ft"><div class="wrap"><a class="logo" href="index.html">'+logo+'</a><div><nav>'+
-    links.map(function(l){ var href = l[1]==="@member" ? "member.html?mode=apply" : l[1].charAt(0)==="@" ? "board.html?b="+l[1].slice(1)+"&write=1" : "page.html?slug="+l[1]; return '<a class="'+(l[2]||"")+'" href="'+href+'">'+l[0]+'</a>'; }).join("")+'</nav>'+
-    '<p><span>주소: '+E(S.address)+'</span><span>대표전화: '+E(S.phone)+'</span><span>청소년보호책임자: '+E(S.youth_officer)+'</span><br><span>제호: '+E(S.reg_title)+'</span><span>등록번호: '+E(S.reg_no)+'</span><span>등록일: '+E(S.reg_date)+'</span><span>발행·편집인: '+E(S.publisher)+'</span></p>'+
+    links.map(function(l){ var href = l[1]==="@organization" ? "organization.html" : l[1]==="@guide" ? "guide.html" : l[1]==="@member" ? "member.html?mode=apply" : l[1].charAt(0)==="@" ? "board.html?b="+l[1].slice(1)+"&write=1" : "page.html?slug="+l[1]; return '<a class="'+(l[2]||"")+'" href="'+href+'">'+l[0]+'</a>'; }).join("")+'</nav>'+
+    '<p><span>주소: '+E(S.address)+'</span><span>대표전화: '+E(S.phone)+'</span><span>청소년보호책임자: '+E(S.youth_officer)+'</span><br><span>제호: '+E(S.reg_title)+'</span><span>등록번호: '+E(S.reg_no)+'</span><span>등록일: '+E(S.reg_date)+'</span><span>발행인: '+E(S.publisher)+'</span><span>편집인: '+E(S.editor_in_chief||"[편집인 입력]")+'</span></p>'+
     '<p>'+E(S.copyright)+'</p></div></div></div><button class="totop" aria-label="맨 위로">&#8593;</button>';
   document.querySelector(".totop").onclick=function(){window.scrollTo({top:0,behavior:"smooth"});};
 };
 U.demoBar = function(){
-  if(!TN.demo) return;
+  if(!TN.demo&&window.TN_CONFIG?.SITE_STAGE!=="preview") return;
   var b=document.createElement("div");
   b.style.cssText="background:#fff7e6;border-bottom:1px solid #ffd591;font-size:13px;text-align:center;padding:6px 10px;color:#7a4b00";
-  b.innerHTML='데모 모드: 데이터가 이 브라우저에만 저장됩니다. 서버 연결은 js/config.js 를 확인하세요. <a href="admin.html" style="text-decoration:underline">관리자</a>';
+  b.innerHTML=TN.demo?'데모 모드: 데이터가 이 브라우저에만 저장됩니다. <a href="admin.html">관리자</a>':'운영 준비 사이트: 기존 예시 기사가 포함되어 있습니다. 편집실은 공동 서버에 연결됩니다. <a href="editor.html">편집실</a> · <a href="guide.html">사용법</a>'; 
   document.body.insertBefore(b,document.body.firstChild);
 };
 U.sidebar = async function(opts){
