@@ -32,7 +32,6 @@ async function start(){
 }
 async function route(){
   var h=(location.hash||"#/dash").slice(2).split("/"), r=h[0];
-  if(TN.live&&r==="members"){location.replace("editor.html#/members");return;}
   [].forEach.call(document.querySelectorAll("nav a[data-r]"),function(a){a.classList.toggle("on",a.dataset.r===r);});
   var m=$("#main"); m.innerHTML='<p class="muted">불러오는 중...</p>';
   try{ await (VIEWS[r]||VIEWS.dash)(m,h[1]); }catch(e){ m.innerHTML='<div class="card"><b>오류</b><p>'+E(e.message)+'</p></div>'; }
@@ -76,23 +75,62 @@ VIEWS.edit=async function(m,id){
    '<form id="af" class="card form simple">'+
    '<label>1. 어디에 올릴까요? *</label><select name="section_id" required><option value="">올릴 위치를 선택하세요</option>'+secOptions(a.section_id,true)+'</select><p class="muted">선택한 메뉴의 기사 목록에 표시됩니다. 회색 항목은 선택할 수 없는 큰 메뉴입니다.</p>'+
    '<label>2. 제목 *</label><input name="title" required maxlength="200" value="'+E(a.title)+'" placeholder="기사 제목">'+
-   '<label>3. 내용 *</label><div class="tbar">'+[["bold","굵게"],["italic","기울임"],["formatBlock:h3","소제목"],["insertUnorderedList","목록"],["createLink","링크"],["img","사진 넣기"],["removeFormat","서식 지우기"]].map(function(t){return '<button type="button" data-c="'+t[0]+'">'+t[1]+'</button>';}).join("")+'<input type="file" id="bi" accept="image/*" hidden></div><div id="body" class="rte" contenteditable="true">'+(a.body||"")+'</div>'+
+   '<label>3. 내용 *</label><div class="tbar">'+[["bold","굵게"],["italic","기울임"],["formatBlock:h3","소제목"],["insertUnorderedList","목록"],["createLink","링크"],["img","사진 넣기"],["removeFormat","서식 지우기"]].map(function(t){return '<button type="button" data-c="'+t[0]+'">'+t[1]+'</button>';}).join("")+'<input type="file" id="bi" accept="image/jpeg,image/png,image/webp" multiple hidden></div><div class="imgbar"><span id="imgmeter" class="pill"></span> <span id="imgsel" hidden><button type="button" class="b line" id="imgup">↑ 위로</button> <button type="button" class="b line" id="imgdn">↓ 아래로</button> <button type="button" class="b line dng" id="imgdel">이 사진 지우기</button></span></div><div id="body" class="rte" contenteditable="true">'+(a.body||"")+'</div><p class="muted">사진을 넣을 <b>글 위치를 클릭</b>한 뒤 <b>사진 넣기</b>를 누르세요(여러 장 선택 가능). 넣은 사진을 누르면 위·아래 이동과 지우기 버튼이 나타나고, 끌어서 옮길 수도 있습니다. 사진은 자동으로 줄여 올리며 한 기사에 <b>최대 5장, 합계 약 2MB</b>까지 올릴 수 있습니다.</p>'+
    '<label>4. 대표 사진 (선택)</label><div class="imgrow"><div id="pv">'+(a.image_url?'<img src="'+E(a.image_url)+'">':'<span class="muted">없음</span>')+'</div><div><input type="file" id="fi" accept="image/*"><button type="button" class="b line" id="ci">사진 빼기</button></div></div>'+
    '<details class="more"'+more+'><summary>더 설정하기 (필요할 때만)</summary><label>부제목</label><input name="subtitle" maxlength="200" value="'+E(a.subtitle||"")+'"><label>기자명</label><input name="author" maxlength="40" value="'+E(a.author||"")+'"><label>요약 (비우면 본문 앞부분으로 자동 작성)</label><textarea name="summary" rows="2" maxlength="400">'+E(a.summary||"")+'</textarea><label>발행일시 (비우면 지금)</label><input type="datetime-local" name="published_at" value="'+(a.published_at?toLocal(a.published_at):"")+'"><div class="g3"><div><label class="chk"><input type="checkbox" name="is_headline"'+(a.is_headline?" checked":"")+'> 메인 헤드라인</label></div><div><label class="chk"><input type="checkbox" name="is_top"'+(a.is_top?" checked":"")+'> 메인 톱 3건</label></div></div><label>영상 / PDF / 이북 주소</label><input type="url" name="video_url" placeholder="https://…" value="'+E(a.video_url||"")+'"></details>'+
    '<p class="bar2">'+(pubd?'<button class="b" value="published">수정 내용 저장 (공개 유지)</button> <button class="b line" value="draft">비공개로 바꾸기</button>':'<button class="b" value="published">바로 발행</button> <button class="b line" value="draft">임시저장</button>')+' <a href="#/articles" class="b line">취소</a></p><p class="muted">'+(pubd?'지금 공개 중인 기사입니다. 저장하면 공개 화면에 바로 반영됩니다.':'임시저장은 방문자에게 보이지 않습니다. 바로 발행하면 사이트에 공개됩니다.')+'</p></form>';
-  var imgUrl=a.image_url||"";
-  $("#fi").onchange=async function(){ try{ imgUrl=await TN.upload(this.files[0]); $("#pv").innerHTML='<img src="'+E(imgUrl)+'">'; toast("사진을 올렸습니다."); }catch(e){toast(e.message,1);} this.value=""; };
-  $("#ci").onclick=function(){ imgUrl=""; $("#pv").innerHTML='<span class="muted">없음</span>'; };
-  [].forEach.call(document.querySelectorAll(".tbar button"),function(b){ b.onclick=function(){ var c=b.dataset.c; $("#body").focus();
-    if(c==="img"){ $("#bi").click(); return; }
-    if(c==="createLink"){ var u=prompt("링크 주소 (https://…)"); if(u&&TN.safeLink(u)) document.execCommand("createLink",false,u); else if(u) toast("올바른 http 또는 https 링크를 입력해주세요.",1); return; }
+  var imgUrl=a.image_url||"", MAX_N=5, MAX_TOTAL=2*1024*1024, MAX_ONE=500*1024, GUESS=400*1024, coverBytes=a.image_url?GUESS:0;
+  var bodyEl0=$("#body"), savedRange=null, uploading=false;
+  function usage(){var imgs=[].slice.call(bodyEl0.querySelectorAll("img")),bytes=imgUrl?coverBytes:0;imgs.forEach(function(i){bytes+=Number(i.dataset.bytes)||GUESS;});return {n:imgs.length+(imgUrl?1:0),bytes:bytes};}
+  function paint(){var u=usage();var el=$("#imgmeter");el.textContent="사진 "+u.n+"/"+MAX_N+"장 · 약 "+(u.bytes/1048576).toFixed(1)+"/2MB";el.style.background=(u.n>=MAX_N||u.bytes>=MAX_TOTAL)?"#fde2df":"#eceff4";}
+  document.addEventListener("selectionchange",function(){var s=getSelection();if(s&&s.rangeCount){var r=s.getRangeAt(0);if(bodyEl0.contains(r.commonAncestorContainer))savedRange=r.cloneRange();}});
+  function restore(){bodyEl0.focus();if(savedRange){var s=getSelection();s.removeAllRanges();s.addRange(savedRange);}else{var r=document.createRange();r.selectNodeContents(bodyEl0);r.collapse(false);var s2=getSelection();s2.removeAllRanges();s2.addRange(r);}}
+  async function addImages(files){
+    if(uploading)return;uploading=true;
+    try{
+      for(var i=0;i<files.length;i++){
+        var u=usage();
+        if(u.n>=MAX_N){toast("사진은 한 기사에 최대 "+MAX_N+"장까지입니다.",1);break;}
+        var room=Math.min(MAX_ONE,MAX_TOTAL-u.bytes);
+        if(room<80*1024){toast("사진 합계 2MB 한도에 도달했습니다.",1);break;}
+        $("#imgmeter").textContent="사진 올리는 중… ("+(i+1)+"/"+files.length+")";
+        var url=await TN.upload(files[i],{maxBytes:room}), size=TN.upload.lastBytes||GUESS;
+        restore();
+        document.execCommand("insertHTML",false,'<p><img src="'+E(url)+'" alt="" data-bytes="'+size+'"></p><p><br></p>');
+        paint();
+      }
+    }catch(e){toast(e.message,1);}
+    uploading=false;paint();
+  }
+  paint();
+  $("#fi").onchange=async function(){ var f=this.files[0]; this.value=""; if(!f)return; try{ var u=usage(), roomC=Math.min(MAX_ONE,MAX_TOTAL-(u.bytes-(imgUrl?coverBytes:0)));if(!imgUrl&&u.n>=MAX_N){toast("사진은 한 기사에 최대 "+MAX_N+"장까지입니다.",1);return;} if(roomC<80*1024){toast("사진 합계 2MB 한도에 도달했습니다.",1);return;} imgUrl=await TN.upload(f,{maxBytes:roomC}); coverBytes=TN.upload.lastBytes||GUESS; $("#pv").innerHTML='<img src="'+E(imgUrl)+'">'; paint(); toast("대표 사진을 올렸습니다."); }catch(e){toast(e.message,1);} };
+  $("#ci").onclick=function(){ imgUrl=""; coverBytes=0; $("#pv").innerHTML='<span class="muted">없음</span>'; paint(); };
+  $("#bi").onchange=function(){ var fs=[].slice.call(this.files); this.value=""; addImages(fs); };
+  bodyEl0.addEventListener("paste",function(e){var files=[].slice.call((e.clipboardData&&e.clipboardData.files)||[]).filter(function(f){return /^image\//.test(f.type);});if(files.length){e.preventDefault();addImages(files);}});
+  bodyEl0.addEventListener("drop",function(e){var files=[].slice.call((e.dataTransfer&&e.dataTransfer.files)||[]).filter(function(f){return /^image\//.test(f.type);});if(files.length){e.preventDefault();addImages(files);}});
+  var curImg=null;
+  function selectImg(img){[].forEach.call(bodyEl0.querySelectorAll("img.sel"),function(i){i.classList.remove("sel");});curImg=img||null;if(curImg)curImg.classList.add("sel");$("#imgsel").hidden=!curImg;}
+  bodyEl0.addEventListener("click",function(e){selectImg(e.target&&e.target.tagName==="IMG"?e.target:null);});
+  bodyEl0.addEventListener("input",function(){if(curImg&&!bodyEl0.contains(curImg))selectImg(null);paint();});
+  function topOf(img){var t=img;while(t.parentNode&&t.parentNode!==bodyEl0)t=t.parentNode;return t;}
+  $("#imgdel").onclick=function(){if(!curImg)return;var t=topOf(curImg);if(t!==curImg&&!t.textContent.trim()&&t.querySelectorAll("img").length===1)t.remove();else curImg.remove();selectImg(null);paint();};
+  function move(dir){if(!curImg)return;var t=topOf(curImg);if(t!==curImg&&(t.textContent.trim()||t.querySelectorAll("img").length!==1)){toast("글과 붙어 있는 사진은 끌어서 옮겨 주세요.",1);return;}
+    var sib=dir<0?t.previousElementSibling:t.nextElementSibling;if(!sib)return;if(dir<0)bodyEl0.insertBefore(t,sib);else bodyEl0.insertBefore(sib,t);}
+  $("#imgup").onclick=function(){move(-1);};$("#imgdn").onclick=function(){move(1);};
+  [].forEach.call(document.querySelectorAll(".tbar button"),function(b){ b.onclick=function(){ var c=b.dataset.c;
+    if(c==="img"){ if(uploading)return; $("#bi").click(); return; }
+    restore();
+    if(c==="createLink"){ var u=prompt("링크 주소 (https://…)"); if(u&&TN.safeLink(u)){restore();document.execCommand("createLink",false,u);} else if(u) toast("올바른 http 또는 https 링크를 입력해주세요.",1); return; }
     if(c.indexOf("formatBlock")===0){ document.execCommand("formatBlock",false,c.split(":")[1]); return; }
     document.execCommand(c,false,null); }; });
-  $("#bi").onchange=async function(){ try{ var u=await TN.upload(this.files[0]); $("#body").focus(); document.execCommand("insertImage",false,u); }catch(e){toast(e.message,1);} this.value=""; };
   var busy=false;
   $("#af").onsubmit=async function(e){
     e.preventDefault(); if(busy) return; var f=new FormData(e.target), mode=(e.submitter&&e.submitter.value)||"draft";
-    var bodyEl=$("#body"), html=bodyEl.innerHTML.trim(), plain=bodyEl.textContent.trim();
+    var bodyEl=$("#body"), plain=bodyEl.textContent.trim();
+    var tmp=bodyEl.cloneNode(true);[].forEach.call(tmp.querySelectorAll("img"),function(i){i.classList.remove("sel");if(!i.getAttribute("class"))i.removeAttribute("class");});
+    if(tmp.querySelector('img[src^="data:"]')){toast("붙여넣어 들어간 사진이 있습니다. 지우고 [사진 넣기]로 다시 넣어 주세요.",1);return;}
+    [].forEach.call(tmp.querySelectorAll("p,div"),function(p){if(!p.textContent.trim()&&!p.querySelector("img,iframe"))p.remove();});
+    var html=tmp.innerHTML.trim();
     var sid=Number(f.get("section_id")), selected=secs.find(function(s){return s.id===sid;});
     if(!selected||selected.kind==='page'||selected.kind==='board'||secs.some(function(s){return s.parent_id===sid;})){toast("올릴 위치를 선택하세요.",1);return;}
     if(!f.get("title").trim()){toast("제목을 입력하세요.",1);return;}
@@ -128,6 +166,31 @@ VIEWS.sections=async function(m){
     if(n&&!confirm("이 섹션에 기사가 "+n+"건 있습니다. 삭제하면 기사가 섹션 없이 남거나 삭제 불가할 수 있습니다. 계속할까요?")) return;
     if(!confirm("섹션을 삭제할까요?")) return;
     try{ await TN.del("sections",a.dataset.d); toast("삭제했습니다."); route(); }catch(err){toast("삭제 실패: "+err.message,1);} };});
+};
+/* ---------- 회원·권한 (관리자 화면 안에서 처리) ---------- */
+var ROLE_LABEL={administrator:"운영 관리자",editor_in_chief:"편집인",publisher:"발행인",department_editor:"부서 편집위원",writer:"작성자"};
+VIEWS.members=async function(m){
+  if(!TN.live||!TN.ops||!TN.ops.ready()){m.innerHTML='<h2>회원·권한 관리</h2><div class="card"><p class="muted">운영서버에 연결된 사이트에서만 사용할 수 있습니다.</p></div>';return;}
+  var ctx=await TN.ops.context(), rows=await TN.ops.members();
+  var deps=(ctx.departments&&ctx.departments.length?ctx.departments:((window.TN_ORG&&window.TN_ORG.departments)||[])).map(function(d){return {code:d.code,name:d.name,lead:d.lead||""};});
+  var deptName=function(c){var d=deps.filter(function(x){return x.code===c;})[0];return d?d.name:c;};
+  m.innerHTML='<div class="bar"><h2>회원·권한 관리</h2></div><div class="card"><p>사이트에 <b>가입하고 메일 인증을 마친 계정</b>만 이 목록에 나타납니다. 이름이 아니라 <b>이메일과 본인</b>을 확인한 뒤 역할을 추가하세요.</p><p class="muted">관리자가 쓰는 기사는 이 권한 없이 바로 발행됩니다. 아래 역할은 편집위원·발행인이 <a href="editor.html" target="_blank" rel="noopener">공동 편집실</a>에서 단계별 검토에 참여할 때 필요합니다. 권한 삭제와 계정 정지는 아직 지원하지 않습니다.</p><div class="filters"><input id="msq" placeholder="이름 또는 이메일 검색"></div></div><div id="mlist"></div>';
+  function draw(){
+    var q=$("#msq").value.trim().toLowerCase();
+    var list=rows.filter(function(r){return (String(r.name||"")+" "+String(r.email||"")).toLowerCase().indexOf(q)>=0;});
+    $("#mlist").innerHTML=list.length?list.map(function(r){
+      return '<form class="card form mf" data-id="'+E(r.id)+'"><h3>'+E(r.name||"이름 미등록")+' <small class="muted">'+E(r.email)+'</small></h3><p>'+((r.roles||[]).length?(r.roles||[]).map(function(x){return '<span class="pill ok">'+E(ROLE_LABEL[x.role]||x.role)+(x.department_code?' · '+E(deptName(x.department_code)):'')+'</span> ';}).join(""):'<span class="muted">부여된 역할 없음</span>')+'</p>'+
+       '<div class="g3"><div><label>추가할 역할</label><select name="role" required><option value="">선택</option>'+Object.keys(ROLE_LABEL).map(function(k){return '<option value="'+k+'">'+ROLE_LABEL[k]+'</option>';}).join("")+'</select></div><div><label>담당 부서</label><select name="dept" disabled><option value="">해당 없음</option>'+deps.map(function(d){return '<option value="'+E(d.code)+'">'+E(d.name)+(d.lead?' ('+E(d.lead)+')':'')+'</option>';}).join("")+'</select></div><div><label class="sp">&nbsp;</label><button class="b">이 계정에 역할 추가</button></div></div></form>';
+    }).join(""):'<div class="card muted">조건에 맞는 가입 회원이 없습니다.</div>';
+    [].forEach.call(document.querySelectorAll("form.mf"),function(f){
+      f.elements.role.onchange=function(){var need=["writer","department_editor"].indexOf(f.elements.role.value)>=0;f.elements.dept.disabled=!need;f.elements.dept.required=need;if(!need)f.elements.dept.value="";};
+      f.onsubmit=async function(e){e.preventDefault();var role=f.elements.role.value,code=f.elements.dept.value,mem=rows.filter(function(x){return String(x.id)===f.dataset.id;})[0];
+        if(!role)return;if(!confirm((mem.email||"")+" 계정에 \""+ROLE_LABEL[role]+(code?" · "+deptName(code):"")+"\" 역할을 추가할까요?"))return;
+        var btn=f.querySelector("button");btn.disabled=true;
+        try{await TN.ops.assign(f.dataset.id,role,code||null);rows=await TN.ops.members();toast("역할을 추가했습니다.");draw();}catch(err){toast("실패: "+err.message,1);btn.disabled=false;}};
+    });
+  }
+  $("#msq").oninput=draw;draw();
 };
 /* ---------- 배너 ---------- */
 VIEWS.banners=async function(m){

@@ -204,21 +204,38 @@ var M = TN.member = {
   adminMembers:function(){return TN.ops.members();},
   review:async function(id,decision,note){if(!['approved','rejected'].includes(decision))throw safeError('심사 결과를 확인해 주세요.');var r=await rpc('application_review',{p_id:id,p_decision:decision,p_note:note||''},true);lastContext=null;return r;}
 };
-async function jpeg(file) {
+async function jpeg(file,maxBytes) {
+  maxBytes=Math.min(Math.max(Number(maxBytes)||512000,50000),1048576);
   var bytes=new Uint8Array(await file.slice(0,16).arrayBuffer()),type=file.type;
   var valid=type==='image/jpeg'?bytes[0]===255&&bytes[1]===216&&bytes[2]===255:type==='image/png'?bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71&&bytes[4]===13&&bytes[5]===10&&bytes[6]===26&&bytes[7]===10:type==='image/webp'?String.fromCharCode.apply(null,bytes.slice(0,4))==='RIFF'&&String.fromCharCode.apply(null,bytes.slice(8,12))==='WEBP':false;
   if(!valid)throw safeError('JPG·PNG·WebP 이미지 원본을 선택해 주세요.');
   var url=URL.createObjectURL(file);
-  try{return await new Promise(function(resolve,reject){var image=new Image();image.onload=function(){try{var w=image.naturalWidth,h=image.naturalHeight;if(!w||!h)throw safeError('이미지를 읽을 수 없습니다.');var scale=Math.min(1,1600/Math.max(w,h)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(w*scale));canvas.height=Math.max(1,Math.round(h*scale));var draw=canvas.getContext('2d');draw.fillStyle='#fff';draw.fillRect(0,0,canvas.width,canvas.height);draw.drawImage(image,0,0,canvas.width,canvas.height);canvas.toBlob(function(blob){blob?resolve(blob):reject(safeError('이미지 변환에 실패했습니다.'));},'image/jpeg',0.82);}catch(e){reject(errorFor(e,false));}};image.onerror=function(){reject(safeError('이미지를 읽을 수 없습니다.'));};image.src=url;});}finally{URL.revokeObjectURL(url);}
+  try{
+    var image=await new Promise(function(resolve,reject){var im=new Image();im.onload=function(){resolve(im);};im.onerror=function(){reject(safeError('이미지를 읽을 수 없습니다.'));};im.src=url;});
+    var w=image.naturalWidth,h=image.naturalHeight;if(!w||!h)throw safeError('이미지를 읽을 수 없습니다.');
+    var edge=1280,quality=0.82;
+    for(var attempt=0;attempt<24;attempt++){
+      var scale=Math.min(1,edge/Math.max(w,h)),canvas=document.createElement('canvas');
+      canvas.width=Math.max(1,Math.round(w*scale));canvas.height=Math.max(1,Math.round(h*scale));
+      var draw=canvas.getContext('2d');draw.fillStyle='#fff';draw.fillRect(0,0,canvas.width,canvas.height);draw.drawImage(image,0,0,canvas.width,canvas.height);
+      var blob=await new Promise(function(resolve){canvas.toBlob(resolve,'image/jpeg',quality);});
+      if(!blob)throw safeError('이미지 변환에 실패했습니다.');
+      if(blob.size<=maxBytes)return blob;
+      quality-=0.08;
+      if(quality<0.5){quality=0.8;edge=Math.round(edge*0.82);if(edge<560)break;}
+    }
+    throw safeError('사진을 한도('+Math.round(maxBytes/1024)+'KB) 안으로 줄이지 못했습니다. 더 단순한 사진을 사용해 주세요.');
+  }finally{URL.revokeObjectURL(url);}
 }
-TN.upload=async function(file){
+TN.compressImage=jpeg;
+TN.upload=async function(file,opts){opts=opts||{};
   await ready();if(!file||!['image/jpeg','image/png','image/webp'].includes(file.type)||!file.size||file.size>5*1024*1024)throw safeError('JPG·PNG·WebP 원본 5MB 이하 파일만 올릴 수 있습니다.');
   var p=await requireProfile(),ctx=await context();if(!ctx.can_admin&&!ctx.allowed_section_ids.length)throw safeError('이미지 업로드 권한이 필요합니다.');
   if(!ctx.uploads_enabled)throw safeError('이미지 업로드는 아직 열리지 않았습니다. 검증된 외부 HTTPS 이미지 주소를 사용해 주세요.');
-  var blob=await jpeg(file),bucket=C.MEDIA_BUCKET,name=p.id+'/'+crypto.randomUUID()+'.jpg';
+  var blob=await jpeg(file,opts.maxBytes),bucket=C.MEDIA_BUCKET,name=p.id+'/'+crypto.randomUUID()+'.jpg';
   if(!authUser||authUser.id!==p.id)throw safeError('로그인 계정이 변경되었습니다. 다시 확인해 주세요.');
   await run(client.storage.from(bucket).upload(name,blob,{contentType:'image/jpeg',upsert:false}),true);
   var result=client.storage.from(bucket).getPublicUrl(name);if(result.error)throw errorFor(result.error,true);
-  var url=result.data&&result.data.publicUrl;if(!url||!url.startsWith('https://'))throw safeError('공개 이미지 URL을 확인하지 못했습니다. 재업로드하지 말고 관리자에게 문의해 주세요.');return url;
+  var url=result.data&&result.data.publicUrl;if(!url||!url.startsWith('https://'))throw safeError('공개 이미지 URL을 확인하지 못했습니다. 재업로드하지 말고 관리자에게 문의해 주세요.');TN.upload.lastBytes=blob.size;return url;
 };
 })();
