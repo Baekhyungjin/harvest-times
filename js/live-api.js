@@ -145,7 +145,7 @@ TN.get = async function(table,col,val){var f={};f[col]='eq.'+val;var r=await TN.
 async function requireAdmin(){if(!await TN.isAdmin())throw safeError('관리자 권한이 필요합니다.');}
 TN.save = async function(table,row,key){
   await ready(); tableName(table); key=key || 'id';
-  if(table==='articles')throw safeError('기사 등록·수정은 편집실을 이용해주세요');
+  if(table==='articles'){await requireAdmin();var ap=Object.assign({},row);if(ap.workflow_version!==undefined&&ap.expected_version===undefined)ap.expected_version=ap.workflow_version;delete ap.workflow_version;delete ap.views;var saved=await rpc('admin_article_save',{p_article:ap},true);return saved;}
   if(table==='posts' && (row[key]==null || row[key]===''))return TN.addPost(row);
   await requireAdmin(); var query, has=row[key]!==undefined&&row[key]!==null&&row[key]!=='';
   if(has && key==='id'){var body=Object.assign({},row);delete body.id;query=db.from(table).update(body).eq(key,row[key]);}
@@ -153,7 +153,7 @@ TN.save = async function(table,row,key){
   else query=db.from(table).insert(row);
   var r=await run(query.select('*').single(),true);return r.data;
 };
-TN.del = async function(table,id,key){await ready();tableName(table);if(table==='articles')throw safeError('기사 등록·수정은 편집실을 이용해주세요');await requireAdmin();await run(db.from(table).delete().eq(key||'id',id),true);};
+TN.del = async function(table,id,key){await ready();tableName(table);if(table==='articles')throw safeError('기사는 삭제하지 않습니다. 기사 수정에서 비공개(임시저장)로 바꿀 수 있습니다.');await requireAdmin();await run(db.from(table).delete().eq(key||'id',id),true);};
 TN.settings = async function(){var r=await TN.list('settings'),out={};r.data.forEach(function(x){out[x.key]=x.value;});return out;};
 TN.saveSetting = function(k,v){return TN.save('settings',{key:k,value:v},'key');};
 TN.sections = async function(){return (await TN.list('sections',{order:'sort.asc'})).data;};

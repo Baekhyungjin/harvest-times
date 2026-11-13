@@ -22,7 +22,7 @@ function loginView(msg){
 }
 
 /* ---------- 틀 ---------- */
-var NAV=[["dash","대시보드"],["articles","기사 관리"],["edit/new","편집실 기사 작성"],["members","회원·권한 관리"],["sections","메뉴·섹션"],["banners","배너"],["inbox","접수함"],["applications","선교사·기자단 승인"],["pages","고정 페이지"],["settings","사이트 설정"]];
+var NAV=[["dash","대시보드"],["edit/new","새 기사 쓰기"],["articles","기사 목록·수정"],["members","회원·권한 관리"],["sections","메뉴·섹션"],["banners","배너"],["inbox","접수함"],["applications","선교사·기자단 승인"],["pages","고정 페이지"],["settings","사이트 설정"]];
 async function start(){
   document.body.className="";
   secs=await TN.sections();
@@ -32,7 +32,6 @@ async function start(){
 }
 async function route(){
   var h=(location.hash||"#/dash").slice(2).split("/"), r=h[0];
-  if(TN.live&&(r==="articles"||r==="edit")){location.replace(r==="edit"?(h[1]==="new"?"editor.html#/new":"editor.html?article="+encodeURIComponent(h[1])+"#/new"):"editor.html#/mine");return;}
   if(TN.live&&r==="members"){location.replace("editor.html#/members");return;}
   [].forEach.call(document.querySelectorAll("nav a[data-r]"),function(a){a.classList.toggle("on",a.dataset.r===r);});
   var m=$("#main"); m.innerHTML='<p class="muted">불러오는 중...</p>';
@@ -45,8 +44,8 @@ VIEWS.dash=async function(m){
   var pub=await TN.list("articles",{filters:{status:"eq.published"},limit:1}), dr=await TN.list("articles",{filters:{status:"eq.draft"},limit:1}),
       inb=await TN.list("posts",{filters:{status:"eq.open"},limit:1});
   var rec=(await TN.list("articles",{order:"created_at.desc",limit:8})).data||[];
-  m.innerHTML='<h2>대시보드</h2><div class="stats"><div class="card"><small>발행된 기사</small><b>'+(pub.count||0)+'</b></div><div class="card"><small>임시저장</small><b>'+(dr.count||0)+'</b></div><div class="card"><small>미확인 접수</small><b>'+(inb.count||0)+'</b></div></div>'+
-   '<div class="card"><h3>최근 기사</h3>'+(rec.length?'<table>'+rec.map(function(a){return '<tr><td><a href="#/edit/'+a.id+'">'+E(a.title)+'</a></td><td>'+E(secName(a.section_id))+'</td><td>'+(a.status==="published"?"발행":"임시")+'</td></tr>';}).join("")+'</table>':'<p class="muted">아직 기사가 없습니다. "기사 작성"에서 첫 기사를 등록하세요.</p>')+'</div>'+
+  m.innerHTML='<div class="bar"><h2>대시보드</h2><a class="b" href="#/edit/new">+ 새 기사 쓰기</a></div><div class="stats"><div class="card"><small>발행된 기사</small><b>'+(pub.count||0)+'</b></div><div class="card"><small>임시저장</small><b>'+(dr.count||0)+'</b></div><div class="card"><small>미확인 접수</small><b>'+(inb.count||0)+'</b></div></div>'+
+   '<div class="card"><h3>최근 기사</h3>'+(rec.length?'<table>'+rec.map(function(a){return '<tr><td><a href="#/edit/'+a.id+'">'+E(a.title)+'</a></td><td>'+E(secName(a.section_id))+'</td><td>'+(a.status==="published"?"발행":"임시")+'</td></tr>';}).join("")+'</table>':'<p class="muted">아직 기사가 없습니다. "새 기사 쓰기"에서 첫 기사를 등록하세요.</p>')+'</div>'+
    (TN.demo&&TN.hasSample()?'<div class="card"><h3>예시 데이터 (하베스트대학교 공개 내용 기반)</h3><p class="muted">예시 기사 29건, 광고 배너 8개, 접수 예시 5건입니다. 실제 운영 전에 "예시 데이터 지우기"로 삭제하세요. 지워도 직접 만든 기사는 남습니다.</p><button class="b" id="ldS">예시 데이터 넣기</button> <button class="b line" id="clS">예시 데이터 지우기</button></div>':'')+(TN.demo?'<div class="card"><h3>데모 도구</h3><p class="muted">레이아웃 확인용입니다. 실제 서버(Supabase) 연결 시에는 이 버튼이 데이터를 만들지 않도록 사용하지 마세요.</p><button class="b" id="seed">샘플 기사 24개 만들기</button> <button class="b line" id="rst">데모 데이터 모두 지우기</button></div>':'');
   if($("#ldS")){ $("#ldS").onclick=async function(){ this.disabled=true; try{ await TN.loadSample(); toast("예시 데이터를 넣었습니다."); route(); }catch(e){ toast(e.message,1); } }; $("#clS").onclick=async function(){ if(!confirm("예시 기사, 배너, 접수를 지울까요?"))return; await TN.clearSample(); toast("지웠습니다."); route(); }; }
   if(TN.demo){ $("#seed").onclick=async function(){ await TN.seedSamples(24); toast("샘플 기사를 만들었습니다."); route(); }; $("#rst").onclick=function(){ if(confirm("이 브라우저의 데모 기사·설정·회원·신청·승인 기록을 모두 지우고 로그아웃할까요?")){ TN.demoReset(); location.reload(); } }; }
@@ -56,9 +55,9 @@ VIEWS.articles=async function(m){
   var st=sessionStorage.getItem("adm_st")||"", sc=sessionStorage.getItem("adm_sc")||"", q=sessionStorage.getItem("adm_q")||"", pg=+(sessionStorage.getItem("adm_pg")||1), size=15;
   var f={}; if(st) f.status="eq."+st; if(sc){ var ch=secs.filter(function(s){return s.parent_id==sc;}).map(function(s){return s.id;}); f.section_id="in.("+[sc].concat(ch).join(",")+")"; } if(q) f.q=q;
   var r=await TN.list("articles",{filters:f,order:"created_at.desc",limit:size,offset:(pg-1)*size}), rows=r.data||[], total=r.count||0, pages=Math.max(1,Math.ceil(total/size));
-  m.innerHTML='<div class="bar"><h2>기사 관리</h2><a class="b" href="#/edit/new">+ 기사 작성</a></div><div class="card"><div class="filters"><select id="fs"><option value="">전체 상태</option><option value="published"'+(st==="published"?" selected":"")+'>발행</option><option value="draft"'+(st==="draft"?" selected":"")+'>임시저장</option></select><select id="fc"><option value="">전체 섹션</option>'+secOptions(sc)+'</select><input id="fq" placeholder="제목·내용 검색" value="'+E(q)+'"><button class="b" id="fg">검색</button></div>'+
+  m.innerHTML='<div class="bar"><h2>기사 관리</h2><a class="b" href="#/edit/new">+ 새 기사 쓰기</a></div><div class="card"><div class="filters"><select id="fs"><option value="">전체 상태</option><option value="published"'+(st==="published"?" selected":"")+'>발행</option><option value="draft"'+(st==="draft"?" selected":"")+'>임시저장</option></select><select id="fc"><option value="">전체 섹션</option>'+secOptions(sc)+'</select><input id="fq" placeholder="제목·내용 검색" value="'+E(q)+'"><button class="b" id="fg">검색</button></div>'+
    '<table><thead><tr><th>제목</th><th>섹션</th><th class="hm">작성자</th><th>상태</th><th>일시</th><th class="hm">조회</th><th></th></tr></thead><tbody>'+
-   (rows.length?rows.map(function(a){return '<tr><td><a href="#/edit/'+a.id+'">'+E(a.title)+'</a>'+(a.is_headline?' <span class="tag">헤드라인</span>':"")+(a.is_top?' <span class="tag t2">톱</span>':"")+'</td><td>'+E(secName(a.section_id))+'</td><td class="hm">'+E(a.author||"")+'</td><td class="nw">'+(a.status==="published"?'<span class="pill ok">발행</span>':'<span class="pill">임시</span>')+'</td><td class="nw">'+TN.fmt(a.published_at||a.created_at,true)+'</td><td class="hm">'+(a.views||0)+'</td><td class="act"><a href="article.html?id='+a.id+'" target="_blank">보기</a> <a href="#" data-del="'+a.id+'" class="dng">삭제</a></td></tr>';}).join(""):'<tr><td colspan="7" class="muted" style="text-align:center;padding:40px">기사가 없습니다.</td></tr>')+
+   (rows.length?rows.map(function(a){return '<tr><td><a href="#/edit/'+a.id+'">'+E(a.title)+'</a>'+(a.is_headline?' <span class="tag">헤드라인</span>':"")+(a.is_top?' <span class="tag t2">톱</span>':"")+'</td><td>'+E(secName(a.section_id))+'</td><td class="hm">'+E(a.author||"")+'</td><td class="nw">'+(a.status==="published"?'<span class="pill ok">발행</span>':'<span class="pill">임시</span>')+'</td><td class="nw">'+TN.fmt(a.published_at||a.created_at,true)+'</td><td class="hm">'+(a.views||0)+'</td><td class="act"><a href="#/edit/'+a.id+'">수정</a> <a href="article.html?id='+a.id+'" target="_blank">보기</a>'+(TN.live?'':' <a href="#" data-del="'+a.id+'" class="dng">삭제</a>')+'</td></tr>';}).join(""):'<tr><td colspan="7" class="muted" style="text-align:center;padding:40px">기사가 없습니다.</td></tr>')+
    '</tbody></table><div class="pg">'+(pg>1?'<button class="b line" id="pp">이전</button>':"")+'<span>'+pg+' / '+pages+' ('+total+'건)</span>'+(pg<pages?'<button class="b line" id="pn">다음</button>':"")+'</div></div>';
   $("#fg").onclick=function(){ sessionStorage.setItem("adm_st",$("#fs").value);sessionStorage.setItem("adm_sc",$("#fc").value);sessionStorage.setItem("adm_q",$("#fq").value);sessionStorage.setItem("adm_pg",1);route(); };
   $("#fq").onkeydown=function(e){if(e.key==="Enter")$("#fg").click();};
@@ -66,37 +65,46 @@ VIEWS.articles=async function(m){
   if($("#pn")) $("#pn").onclick=function(){sessionStorage.setItem("adm_pg",pg+1);route();};
   [].forEach.call(document.querySelectorAll("[data-del]"),function(a){ a.onclick=async function(e){ e.preventDefault(); if(!confirm("이 기사를 삭제할까요? 되돌릴 수 없습니다.")) return; await TN.del("articles",a.dataset.del); toast("삭제했습니다."); route(); }; });
 };
-/* ---------- 기사 편집 ---------- */
+/* ---------- 기사 작성·수정 (쉬운 화면) ---------- */
 VIEWS.edit=async function(m,id){
   var a = id&&id!=="new" ? await TN.get("articles","id",id) : null;
-  a = a || {status:"draft",author:"",section_id:"",title:"",subtitle:"",summary:"",body:"",image_url:"",is_headline:false,is_top:false};
-  m.innerHTML='<div class="bar"><h2>'+(a.id?"기사 수정":"기사 작성")+'</h2>'+(a.id?'<a href="article.html?id='+a.id+'" target="_blank" class="b line">미리보기</a>':"")+'</div><form id="af" class="card form">'+
-   '<label>제목 *</label><input name="title" required maxlength="200" value="'+E(a.title)+'"><label>부제목</label><input name="subtitle" maxlength="200" value="'+E(a.subtitle||"")+'">'+
-   '<div class="g3"><div><label>카테고리 *</label><select name="section_id" required><option value="">선택</option>'+secOptions(a.section_id,true)+'</select></div><div><label>기자명</label><input name="author" maxlength="40" value="'+E(a.author||"")+'"></div><div><label>발행일시</label><input type="datetime-local" name="published_at" value="'+toLocal(a.published_at)+'"></div></div>'+
-   '<div class="g3"><div><label>상태</label><select name="status"><option value="draft"'+(a.status==="draft"?" selected":"")+'>임시저장</option><option value="published"'+(a.status==="published"?" selected":"")+'>발행</option></select></div><div><label class="sp">&nbsp;</label><label class="chk"><input type="checkbox" name="is_headline"'+(a.is_headline?" checked":"")+'> 메인 헤드라인</label></div><div><label class="sp">&nbsp;</label><label class="chk"><input type="checkbox" name="is_top"'+(a.is_top?" checked":"")+'> 메인 톱 3건</label></div></div>'+
-   '<label>영상 / PDF / 이북 주소 (선택)</label><input type="url" name="video_url" placeholder="https://…" value="'+E(a.video_url||'')+'"><p class="muted">PDF·이북은 매거진 → PDF / 이북 보기, 영상은 타임 TV → 하베스트 영상 / 브이로그를 선택하세요. 파일을 별도 호스팅에 올린 뒤 공개 주소를 입력합니다.</p><label>대표 이미지</label><div class="imgrow"><div id="pv">'+(a.image_url?'<img src="'+E(a.image_url)+'">':'<span class="muted">없음</span>')+'</div><div><input type="file" id="fi" accept="image/*"><input name="image_url" placeholder="또는 이미지 주소" value="'+(a.image_url&&a.image_url.indexOf("data:")===0?"":E(a.image_url||""))+'"><button type="button" class="b line" id="ci">이미지 제거</button></div></div>'+
-   '<label>요약 (목록에 표시)</label><textarea name="summary" rows="3" maxlength="400">'+E(a.summary||"")+'</textarea>'+
-   '<label>본문</label><div class="tbar">'+[["bold","B"],["italic","I"],["formatBlock:h3","제목"],["insertUnorderedList","목록"],["createLink","링크"],["img","사진"],["removeFormat","서식해제"]].map(function(t){return '<button type="button" data-c="'+t[0]+'">'+t[1]+'</button>';}).join("")+'<input type="file" id="bi" accept="image/*" hidden></div><div id="body" class="rte" contenteditable="true">'+(a.body||"")+'</div>'+
-   '<p class="bar2"><button class="b">저장</button> <a href="#/articles" class="b line">목록</a>'+(a.id?' <a href="#" id="dl" class="dng">삭제</a>':"")+'</p></form>';
+  if(id&&id!=="new"&&!a){ m.innerHTML='<div class="card"><b>기사를 찾을 수 없습니다.</b><p><a href="#/articles">기사 목록으로</a></p></div>'; return; }
+  var isNew=!a, pubd=!!a&&a.status==="published";
+  a = a || {status:"draft",author:"",section_id:"",title:"",subtitle:"",summary:"",body:"",image_url:"",video_url:"",is_headline:false,is_top:false};
+  var more=(a.subtitle||a.author||a.video_url||a.is_headline||a.is_top)?" open":"";
+  m.innerHTML='<div class="bar"><h2>'+(isNew?"새 기사 쓰기":"기사 수정")+'</h2><span><a href="#/articles" class="b line">← 목록으로</a>'+(a.id?' <a href="article.html?id='+a.id+'" target="_blank" class="b line">공개 화면 보기</a>':"")+'</span></div>'+
+   '<form id="af" class="card form simple">'+
+   '<label>1. 어디에 올릴까요? *</label><select name="section_id" required><option value="">올릴 위치를 선택하세요</option>'+secOptions(a.section_id,true)+'</select><p class="muted">선택한 메뉴의 기사 목록에 표시됩니다. 회색 항목은 선택할 수 없는 큰 메뉴입니다.</p>'+
+   '<label>2. 제목 *</label><input name="title" required maxlength="200" value="'+E(a.title)+'" placeholder="기사 제목">'+
+   '<label>3. 내용 *</label><div class="tbar">'+[["bold","굵게"],["italic","기울임"],["formatBlock:h3","소제목"],["insertUnorderedList","목록"],["createLink","링크"],["img","사진 넣기"],["removeFormat","서식 지우기"]].map(function(t){return '<button type="button" data-c="'+t[0]+'">'+t[1]+'</button>';}).join("")+'<input type="file" id="bi" accept="image/*" hidden></div><div id="body" class="rte" contenteditable="true">'+(a.body||"")+'</div>'+
+   '<label>4. 대표 사진 (선택)</label><div class="imgrow"><div id="pv">'+(a.image_url?'<img src="'+E(a.image_url)+'">':'<span class="muted">없음</span>')+'</div><div><input type="file" id="fi" accept="image/*"><button type="button" class="b line" id="ci">사진 빼기</button></div></div>'+
+   '<details class="more"'+more+'><summary>더 설정하기 (필요할 때만)</summary><label>부제목</label><input name="subtitle" maxlength="200" value="'+E(a.subtitle||"")+'"><label>기자명</label><input name="author" maxlength="40" value="'+E(a.author||"")+'"><label>요약 (비우면 본문 앞부분으로 자동 작성)</label><textarea name="summary" rows="2" maxlength="400">'+E(a.summary||"")+'</textarea><label>발행일시 (비우면 지금)</label><input type="datetime-local" name="published_at" value="'+(a.published_at?toLocal(a.published_at):"")+'"><div class="g3"><div><label class="chk"><input type="checkbox" name="is_headline"'+(a.is_headline?" checked":"")+'> 메인 헤드라인</label></div><div><label class="chk"><input type="checkbox" name="is_top"'+(a.is_top?" checked":"")+'> 메인 톱 3건</label></div></div><label>영상 / PDF / 이북 주소</label><input type="url" name="video_url" placeholder="https://…" value="'+E(a.video_url||"")+'"></details>'+
+   '<p class="bar2">'+(pubd?'<button class="b" value="published">수정 내용 저장 (공개 유지)</button> <button class="b line" value="draft">비공개로 바꾸기</button>':'<button class="b" value="published">바로 발행</button> <button class="b line" value="draft">임시저장</button>')+' <a href="#/articles" class="b line">취소</a></p><p class="muted">'+(pubd?'지금 공개 중인 기사입니다. 저장하면 공개 화면에 바로 반영됩니다.':'임시저장은 방문자에게 보이지 않습니다. 바로 발행하면 사이트에 공개됩니다.')+'</p></form>';
   var imgUrl=a.image_url||"";
-  $("#fi").onchange=async function(){ try{ imgUrl=await TN.upload(this.files[0]); $("#pv").innerHTML='<img src="'+E(imgUrl)+'">'; $('[name=image_url]').value=""; toast("이미지를 올렸습니다."); }catch(e){toast(e.message,1);} };
-  $('[name=image_url]').oninput=function(){ imgUrl=this.value; $("#pv").innerHTML=imgUrl?'<img src="'+E(imgUrl)+'">':'<span class="muted">없음</span>'; };
-  $("#ci").onclick=function(){ imgUrl=""; $('[name=image_url]').value=""; $("#pv").innerHTML='<span class="muted">없음</span>'; };
+  $("#fi").onchange=async function(){ try{ imgUrl=await TN.upload(this.files[0]); $("#pv").innerHTML='<img src="'+E(imgUrl)+'">'; toast("사진을 올렸습니다."); }catch(e){toast(e.message,1);} this.value=""; };
+  $("#ci").onclick=function(){ imgUrl=""; $("#pv").innerHTML='<span class="muted">없음</span>'; };
   [].forEach.call(document.querySelectorAll(".tbar button"),function(b){ b.onclick=function(){ var c=b.dataset.c; $("#body").focus();
     if(c==="img"){ $("#bi").click(); return; }
-    if(c==="createLink"){ var u=prompt("링크 주소"); if(u) document.execCommand("createLink",false,u); return; }
+    if(c==="createLink"){ var u=prompt("링크 주소 (https://…)"); if(u&&TN.safeLink(u)) document.execCommand("createLink",false,u); else if(u) toast("올바른 http 또는 https 링크를 입력해주세요.",1); return; }
     if(c.indexOf("formatBlock")===0){ document.execCommand("formatBlock",false,c.split(":")[1]); return; }
     document.execCommand(c,false,null); }; });
   $("#bi").onchange=async function(){ try{ var u=await TN.upload(this.files[0]); $("#body").focus(); document.execCommand("insertImage",false,u); }catch(e){toast(e.message,1);} this.value=""; };
-  if($("#dl")) $("#dl").onclick=async function(e){ e.preventDefault(); if(!confirm("이 기사를 삭제할까요? 되돌릴 수 없습니다.")) return; await TN.del("articles",a.id); location.hash="#/articles"; };
+  var busy=false;
   $("#af").onsubmit=async function(e){
-    e.preventDefault(); var f=new FormData(e.target);
-    var row={ title:f.get("title").trim(), subtitle:f.get("subtitle"), section_id:Number(f.get("section_id")), author:f.get("author"), status:f.get("status"),
-      published_at:new Date(f.get("published_at")).toISOString(), is_headline:!!f.get("is_headline"), is_top:!!f.get("is_top"), image_url:imgUrl||null, summary:f.get("summary"), body:$("#body").innerHTML, video_url:f.get("video_url")||null };
-    var selected=secs.find(function(s){return s.id===row.section_id;});
-    if(!selected||selected.kind==='page'||selected.kind==='board'||secs.some(function(s){return s.parent_id===row.section_id;})){toast('기사를 게시할 하위 카테고리를 선택하세요.',1);return;}
-    if(a.id) row.id=a.id; else row.views=0;
-    try{ var s=await TN.save("articles",row); toast("저장했습니다."); if(!a.id) location.hash="#/edit/"+s.id; }catch(err){ toast("저장 실패: "+err.message,1); }
+    e.preventDefault(); if(busy) return; var f=new FormData(e.target), mode=(e.submitter&&e.submitter.value)||"draft";
+    var bodyEl=$("#body"), html=bodyEl.innerHTML.trim(), plain=bodyEl.textContent.trim();
+    var sid=Number(f.get("section_id")), selected=secs.find(function(s){return s.id===sid;});
+    if(!selected||selected.kind==='page'||selected.kind==='board'||secs.some(function(s){return s.parent_id===sid;})){toast("올릴 위치를 선택하세요.",1);return;}
+    if(!f.get("title").trim()){toast("제목을 입력하세요.",1);return;}
+    if(mode==="published"&&!plain&&!bodyEl.querySelector("img")){toast("내용을 입력하세요.",1);return;}
+    var pubAt=f.get("published_at");
+    var row={ title:f.get("title").trim(), subtitle:f.get("subtitle")||"", section_id:sid, author:f.get("author")||"", status:mode,
+      published_at:pubAt?new Date(pubAt).toISOString():(a.id?a.published_at:null), is_headline:!!f.get("is_headline"), is_top:!!f.get("is_top"), image_url:imgUrl||null,
+      summary:(f.get("summary")||"").trim()||plain.replace(/\s+/g," ").slice(0,120), body:html, video_url:f.get("video_url")||null };
+    if(a.id){ row.id=a.id; row.expected_version=a.workflow_version; }
+    busy=true; [].forEach.call(e.target.querySelectorAll("button"),function(b){b.disabled=true;});
+    try{ var s=await TN.save("articles",row); toast(mode==="published"?"발행했습니다.":"임시저장했습니다."); location.hash=a.id?"#/edit/"+s.id:"#/articles"; if(a.id) route(); }
+    catch(err){ toast("저장 실패: "+err.message,1); busy=false; [].forEach.call(e.target.querySelectorAll("button"),function(b){b.disabled=false;}); }
   };
 };
 /* ---------- 섹션 ---------- */
@@ -124,16 +132,16 @@ VIEWS.sections=async function(m){
 /* ---------- 배너 ---------- */
 VIEWS.banners=async function(m){
   var bs=(await TN.list("banners",{})).data||[];
-  m.innerHTML='<h2>배너</h2><p class="muted">사이트 곳곳의 광고 자리입니다. 이미지를 올리고 링크를 넣으면 바로 반영됩니다.</p><div class="bgrid">'+TN.BANNER_SLOTS.map(function(s){
+  m.innerHTML='<h2>배너</h2><p class="muted">사이트 곳곳의 광고 자리입니다. 각 칸은 <b>그 자리 하나만</b> 바꾸며, 다른 기사·배너에는 영향이 없습니다. <b>저장하면 방문자 화면에 바로 반영됩니다</b>(임시저장 없음).</p><div class="bgrid">'+TN.BANNER_SLOTS.map(function(s){
     var b=bs.filter(function(x){return x.slot===s.slot;})[0]||{};
-    return '<form class="card form bn" data-slot="'+s.slot+'"><h3>'+s.label+' <small class="muted">'+s.size+'</small></h3><div class="bpv">'+(b.image_url?'<img src="'+E(b.image_url)+'">':'<span class="muted">이미지 없음</span>')+'</div><input type="file" accept="image/*"><label>링크 주소</label><input name="link_url" value="'+E(b.link_url||"")+'" placeholder="https://"><label class="chk"><input type="checkbox" name="active"'+(b.active!==false?" checked":"")+'> 사용</label><p><button class="b">저장</button> '+(b.id?'<a href="#" class="dng rm">제거</a>':"")+'</p><input type="hidden" name="image_url" value="'+(b.image_url&&b.image_url.indexOf("data:")===0?"":E(b.image_url||""))+'"><input type="hidden" name="id" value="'+(b.id||"")+'"></form>';
+    return '<form class="card form bn" data-slot="'+s.slot+'"><h3>'+s.label+' <small class="muted">'+s.size+'</small></h3><div class="bpv">'+(b.image_url?'<img src="'+E(b.image_url)+'">':'<span class="muted">이미지 없음</span>')+'</div><input type="file" accept="image/*"><label>링크 주소</label><input name="link_url" value="'+E(b.link_url||"")+'" placeholder="https://"><label class="chk"><input type="checkbox" name="active"'+(b.active!==false?" checked":"")+'> 사용</label><p><button class="b">저장 (바로 공개)</button> '+(b.id?'<a href="#" class="dng rm">이 자리 비우기</a>':"")+'</p><input type="hidden" name="image_url" value="'+(b.image_url&&b.image_url.indexOf("data:")===0?"":E(b.image_url||""))+'"><input type="hidden" name="id" value="'+(b.id||"")+'"></form>';
   }).join("")+'</div>';
   [].forEach.call(document.querySelectorAll("form.bn"),function(f){
     var img=(bs.filter(function(x){return x.slot===f.dataset.slot;})[0]||{}).image_url||"";
     f.querySelector("input[type=file]").onchange=async function(){ try{ img=await TN.upload(this.files[0]); f.querySelector(".bpv").innerHTML='<img src="'+E(img)+'">'; }catch(e){toast(e.message,1);} };
     f.onsubmit=async function(e){ e.preventDefault(); var fd=new FormData(f); var row={slot:f.dataset.slot,image_url:img||null,link_url:fd.get("link_url")||null,active:!!fd.get("active"),title:TN.BANNER_SLOTS.filter(function(s){return s.slot===f.dataset.slot;})[0].label}; if(row.link_url&&!TN.safeLink(row.link_url)){toast("올바른 http 또는 https 링크를 입력해주세요.",1);return;} if(fd.get("id")) row.id=+fd.get("id");
       try{ await TN.save("banners",row); toast("저장했습니다."); route(); }catch(err){toast("저장 실패: "+err.message,1);} };
-    var rm=f.querySelector(".rm"); if(rm) rm.onclick=async function(e){ e.preventDefault(); if(!confirm("이 배너를 제거할까요?"))return; await TN.del("banners",f.querySelector("[name=id]").value); route(); };
+    var rm=f.querySelector(".rm"); if(rm) rm.onclick=async function(e){ e.preventDefault(); if(!confirm("이 자리의 배너 설정(이미지·링크)을 비울까요?\n이 칸만 비워지고 다른 배너와 기사에는 영향이 없습니다. 방문자 화면에서 바로 사라집니다."))return; await TN.del("banners",f.querySelector("[name=id]").value); route(); };
   });
 };
 /* ---------- 접수함 ---------- */
