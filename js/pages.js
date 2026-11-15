@@ -66,7 +66,7 @@ async function home(U){
       var np=[];try{np=(await TN.net.list({limit:3})).data||[];}catch(_){np=[];}
       if(np.length){
         var KL={news:"선교사 소식",prayer:"긴급기도",event:"협력 행사"};
-        blocks+='<div class="b"><h3><a href="network.html">'+E(bs.name)+'</a></h3>'+np.map(function(p){return '<a class="it net-it" href="network.html?id='+p.id+'"><h4><small>'+E(KL[p.kind]||"")+'</small> '+E(p.title)+'</h4>'+(p.images&&p.images[0]?'<div class="thumb"><img src="'+E(p.images[0])+'" alt="" loading="lazy"></div>':'')+'</a>';}).join("")+'</div>';
+        blocks+='<div class="b"><h3><a href="network.html">'+E(bs.name)+'</a></h3>'+np.map(function(p){return '<a class="it net-it" href="network.html?id='+p.id+'"><h4><small>'+E(KL[p.kind]||"")+'</small> '+E(p.title)+'</h4>'+(p.images&&p.images[0]?'<div class="thumb"><img src="'+E(p.images[0])+'" alt="" loading="lazy"></div>':'<div class="thumb nwph"><span>'+E(KL[p.kind]||"")+'</span></div>')+'</a>';}).join("")+'</div>';
         continue;
       }
     }
