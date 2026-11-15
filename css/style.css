@@ -215,3 +215,4 @@ button{font:inherit;cursor:pointer}
 
 .adpair.one{grid-template-columns:1fr}.focus.noad{grid-template-columns:repeat(3,1fr)}.focus.noad .it:last-child{border-right:0}
 .net-it h4 small{display:inline-block;font-size:12px;color:var(--brand);font-weight:700;margin-right:4px}
+.thumb.nwph{background:#1d3560;display:flex;align-items:flex-end;padding:8px;box-sizing:border-box}.thumb.nwph span{color:#e2c27f;font-size:12px;font-weight:700}

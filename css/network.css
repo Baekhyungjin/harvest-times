@@ -54,7 +54,7 @@
 .b-urgent{background:#fde4e1;color:#b42318}.b-praying{background:#fff2d6;color:#8a5a00}.b-answered{background:#ddf3e6;color:#1d6b40}.b-past{background:#eceff3;color:#5b6676}.b-ok{background:#e3ecfb;color:#0b3b8f}
 .nw-prayer{border-top:4px solid #e6c27a}.nw-prayer.st-urgent{border-top-color:#d9483b}.nw-prayer.st-answered{border-top-color:#2f9461}
 .nw-prayer h3{font-size:20px}
-.nw-prayer{align-self:start}
+.nw-prayer,.nw-event{align-self:start}
 .nw-event{flex-direction:row}
 .nw-date{flex:0 0 92px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f2242;color:#fff;padding:16px 8px;text-align:center}
 .nw-date span{font-size:14px;color:#e2c27f;font-weight:700}.nw-date b{font-size:38px;line-height:1.05;font-variant-numeric:tabular-nums}.nw-date small{font-size:12px;color:#aebbd0}
