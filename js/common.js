@@ -124,14 +124,14 @@ U.boot = async function(active, fn){
   var w=document.getElementById("app");
   if(w){
     var scope=(U.S&&U.S.sky_banner_scope)||"home", isHome=document.body.getAttribute("data-page")==="home", closed=false;
-    try{ closed=sessionStorage.getItem("tn_sky_closed")==="1"; }catch(_){}
+    try{ var until=+(localStorage.getItem("tn_sky_closed_until")||0); closed=until>Date.now(); }catch(_){}
     var showSky=!closed&&scope!=="off"&&(scope==="all"||isHome);
     var sl=showSky?U.ad("sky_left"):"", sr=showSky?U.ad("sky_right"):"";
-    var x='<button type="button" class="skyx" aria-label="양쪽 세로 배너 닫기" title="닫기">&times;</button>';
+    var x='<button type="button" class="skyx" aria-label="양쪽 세로 배너 오늘 하루 닫기" title="오늘 하루 보지 않기">&times;</button>';
     var sky=document.createElement("div"); sky.className="skywrap";
     sky.innerHTML=(sl?'<div class="skyL">'+x+sl+'</div>':'')+(sr?'<div class="skyR">'+x+sr+'</div>':'');
     w.parentNode.insertBefore(sky,w); sky.appendChild(w);
-    [].forEach.call(sky.querySelectorAll(".skyx"),function(b){ b.onclick=function(e){ e.preventDefault(); try{sessionStorage.setItem("tn_sky_closed","1");}catch(_){} [].forEach.call(sky.querySelectorAll(".skyL,.skyR"),function(n){n.remove();}); }; });
+    [].forEach.call(sky.querySelectorAll(".skyx"),function(b){ b.onclick=function(e){ e.preventDefault(); try{localStorage.setItem("tn_sky_closed_until",String(Date.now()+864e5));}catch(_){} [].forEach.call(sky.querySelectorAll(".skyL,.skyR"),function(n){n.remove();}); }; });
   }
 };
 })();

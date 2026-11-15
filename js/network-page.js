@@ -254,7 +254,7 @@ async function mine(){
 }
 
 TNUI.boot(null,async function(ui){
-  U=ui;app=document.getElementById('app');sections();
+  U=ui;app=document.getElementById('app');sections();if(ROOT)U.header(ROOT.id);
   if(!TN.net||!TN.net.ready()){app.innerHTML='<div class="wrap nw-narrow"><div class="nw-empty"><h2>운영 서버에 연결되지 않았습니다.</h2></div></div>';return;}
   var id=q('id'),edit=q('edit');
   if(id)return detail(id);
