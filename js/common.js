@@ -2,7 +2,17 @@
 var E = TN.esc;
 var U = window.TNUI = {};
 U.q = function(k){ return new URLSearchParams(location.search).get(k); };
+U.netTab = function(s){
+  if(!s) return null;
+  var all=U.sections||[], par=all.filter(function(x){return x.id===s.parent_id;})[0];
+  if(s.code==="mission-network") return "all";
+  if(!par||par.code!=="mission-network") return null;
+  if(s.code==="partner-events"||/행사|대회/.test(s.name||"")) return "event";
+  if(/기도/.test(s.name||"")) return "prayer";
+  return "news";
+};
 U.secUrl = function(s){
+  var nt=U.netTab(s); if(nt) return "network.html"+(nt==="all"?"":"?tab="+nt);
   if(s.id===7001||s.id===7111)return "mall.html?view=mall";
   if(s.id===7112)return "mall.html?view=pension";
   if(s.kind==="board") return "board.html?b="+encodeURIComponent(s.code)+"&s="+s.id;
@@ -19,7 +29,8 @@ U.title = function(a){ return a ? E(a.title) : '<span class="sk-t">기사 제목
 U.ad = function(slot,cls,w,h){
   var b = (U.banners||[]).filter(function(x){return x.slot===slot&&x.active!==false;})[0];
   var def = TN.BANNER_SLOTS.filter(function(x){return x.slot===slot;})[0];
-  var inner = b&&b.image_url ? '<img src="'+E(b.image_url)+'" alt="'+E(b.title||"광고")+'">' : '광고 배너<br>'+(def?def.size:"");
+  if(!b||!b.image_url) return "";
+  var inner = '<img src="'+E(b.image_url)+'" alt="'+E(b.title||"광고")+'">';
   var h = '<div class="ad '+(cls||"")+'">'+inner+'</div>';
   return b&&TN.safeLink(b.link_url) ? '<a href="'+E(TN.safeLink(b.link_url))+'" target="_blank" rel="noopener" class="adlink">'+h+'</a>' : h;
 };
@@ -111,6 +122,6 @@ U.boot = async function(active, fn){
   await fn(U);
   U.footer();
   var w=document.getElementById("app");
-  if(w){ var sky=document.createElement("div"); sky.className="skywrap"; sky.innerHTML='<div class="skyL">'+U.ad("sky_left")+'</div><div class="skyR">'+U.ad("sky_right")+'</div>'; w.parentNode.insertBefore(sky,w); sky.appendChild(w); }
+  if(w){ var sl=U.ad("sky_left"), sr=U.ad("sky_right"); var sky=document.createElement("div"); sky.className="skywrap"; sky.innerHTML=(sl?'<div class="skyL">'+sl+'</div>':'')+(sr?'<div class="skyR">'+sr+'</div>':''); w.parentNode.insertBefore(sky,w); sky.appendChild(w); }
 };
 })();

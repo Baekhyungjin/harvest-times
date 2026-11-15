@@ -62,6 +62,14 @@ async function home(U){
     var bs=secSetting(U,"home_block_"+j,["columns","mission-network","photo-sketch"][j-1]);
     var list=bs?((await TN.published({section_id:"in.("+ids(bs,U.sections).join(",")+")"},{limit:3})).data||[]):[];
     var body;
+    if(bs&&bs.code==="mission-network"&&TN.net&&TN.net.ready()){
+      var np=[];try{np=(await TN.net.list({limit:3})).data||[];}catch(_){np=[];}
+      if(np.length){
+        var KL={news:"선교사 소식",prayer:"긴급기도",event:"협력 행사"};
+        blocks+='<div class="b"><h3><a href="network.html">'+E(bs.name)+'</a></h3>'+np.map(function(p){return '<a class="it net-it" href="network.html?id='+p.id+'"><h4><small>'+E(KL[p.kind]||"")+'</small> '+E(p.title)+'</h4>'+(p.images&&p.images[0]?'<div class="thumb"><img src="'+E(p.images[0])+'" alt="" loading="lazy"></div>':'')+'</a>';}).join("")+'</div>';
+        continue;
+      }
+    }
     if(j===3){ var v=list[0]; body='<a class="vid" href="'+(v?U.artUrl(v):"#")+'">'+U.thumb(v)+(bs&&bs.kind==="video"?'<span class="play"></span>':'')+'<h4>'+U.title(v)+'</h4><small>'+E(bs?bs.name:"")+'</small></a>'; }
     else body=list.length?list.map(function(a){return '<a class="it" href="'+U.artUrl(a)+'"><h4>'+U.title(a)+'</h4>'+U.thumb(a)+'</a>';}).join(""):'<p class="muted empty-state">콘텐츠 등록을 준비하고 있습니다.</p>';
     blocks+='<div class="b"><h3>'+E(bs?bs.name:"섹션 "+j)+'</h3>'+body+'</div>';
@@ -73,10 +81,10 @@ async function home(U){
    '<section class="hero"><div class="wrap"><div><h1>'+U.title(h)+'</h1><p>'+(h?E(h.summary||""):'<span class="sk-t">기사 요약문이 들어갑니다. 관리자에서 기사를 발행하고 "헤드라인"으로 지정하면 이 자리에 표시됩니다.</span>')+'</p></div><a href="'+(h?U.artUrl(h):"#")+'">'+U.thumb(h)+'</a></div></section>'+
    '<div class="wrap"><div class="cards3">'+U.pad(top3,3).map(function(a){return '<a href="'+(a?U.artUrl(a):"#")+'">'+U.thumb(a)+'<h3>'+U.title(a)+'</h3></a>';}).join("")+'</div>'+
    '<div class="cols"><main><div class="lst2">'+U.pad(l1,10).map(function(a){return item(U,a);}).join("")+'</div>'+
-   '<div class="adpair">'+U.ad("pair_1")+U.ad("pair_2")+'</div>'+
+   (function(){var p1=U.ad("pair_1"),p2=U.ad("pair_2");return (p1||p2)?'<div class="adpair'+(p1&&p2?'':' one')+'">'+p1+p2+'</div>':'';})()+
    '<div class="lst2">'+U.pad(l2,10).map(function(a){return item(U,a);}).join("")+'</div></main>'+
    '<aside class="side">'+U.ad("side_1","sq")+'<div class="tabs"><button class="on" data-t="pop">조회순</button><button data-t="lat">최신순</button></div><div id="rk">'+rankList(pop)+'</div>'+boxes+'</aside></div>'+
-   '<div class="focus">'+fl.map(function(a){return '<a class="it" href="'+(a?U.artUrl(a):"#")+'">'+U.thumb(a)+'<h4>'+U.title(a)+'</h4></a>';}).join("")+'<div>'+U.ad("focus_side")+'</div></div>'+
+   (function(){var fa=U.ad("focus_side");return '<div class="focus'+(fa?'':' noad')+'">'+fl.map(function(a){return '<a class="it" href="'+(a?U.artUrl(a):"#")+'">'+U.thumb(a)+'<h4>'+U.title(a)+'</h4></a>';}).join("")+(fa?'<div>'+fa+'</div>':'')+'</div>';})()+
    '<div class="blocks3">'+blocks+'</div></div>';
   var tabs=document.querySelectorAll(".tabs button");
   [].forEach.call(tabs,function(b){ b.onclick=function(){ [].forEach.call(tabs,function(x){x.classList.toggle("on",x===b);}); document.getElementById("rk").innerHTML=rankList(b.dataset.t==="pop"?pop:lat); }; });
@@ -85,6 +93,7 @@ async function home(U){
 /* ---------------- 목록/검색 ---------------- */
 async function list(U){
   var sid=U.q("s"), q=U.q("q"), pg=parseInt(U.q("p")||"1",10), sec=sid?U.sections.filter(function(s){return String(s.id)===sid;})[0]:null;
+  var nt=sec&&U.netTab(sec); if(nt){ location.replace("network.html"+(nt==="all"?"":"?tab="+nt)); return; }
   var isArchive=sec&&sec.code==="archive", isNetwork=sec&&(sec.code==="mission-updates"||sec.code==="mission-network");
   var children=sec?U.sections.filter(function(s){return s.parent_id===sec.id&&s.visible!==false;}):[];
   var view=isArchive?"grid":(localStorage.getItem("tn_view")||(sec&&sec.kind==="photo"?"grid":"sm"));
@@ -151,7 +160,10 @@ async function article(U){
 /* ---------------- 게시판/제보/문의 ---------------- */
 var BOARDS={free:{t:"자유게시판",pub:true},reporter:{t:"독자기자",pub:true},report:{t:"기사제보",pub:false},ad:{t:"광고문의",pub:false}};
 async function board(U){
-  var b=U.q("b")||"free"; if(!Object.prototype.hasOwnProperty.call(BOARDS,b))b="free"; var cfg=BOARDS[b];
+  var b=U.q("b")||"free";
+  var bsec=U.sections.filter(function(s){return String(s.id)===String(U.q("s"))||s.code===b;})[0], bnt=bsec&&U.netTab(bsec);
+  if(bnt||/^mission-network/.test(b)){ location.replace("network.html"+(bnt&&bnt!=="all"?"?tab="+bnt:"")); return; }
+  if(!Object.prototype.hasOwnProperty.call(BOARDS,b))b="free"; var cfg=BOARDS[b];
   var id=U.q("id"), write=U.q("write")==="1"||!cfg.pub, pg=parseInt(U.q("p")||"1",10), size=15;
   var app=document.getElementById("app");
   function shell(inner){ app.innerHTML='<div class="wrap"><div class="cols"><main><div class="ph-head"><h1>'+E(cfg.t)+'</h1></div>'+inner+'</main><aside class="side">'+U.ad("side_1","sq")+U.ad("side_2","tall")+'</aside></div></div>'; }
@@ -162,8 +174,14 @@ async function board(U){
     return;
   }
   if(write){
+    var me=null;
+    if(b==="report"){
+      try{ me=TN.member&&TN.member.current?await TN.member.current():null; }catch(_){ me=null; }
+      if(!me){ try{sessionStorage.setItem("tn_after_login",location.pathname.split("/").pop()+location.search);}catch(_){}
+        shell('<div class="notice">기사제보는 회원만 할 수 있습니다. 로그인 후 다시 이용해 주세요.</div><p style="padding:24px 0;display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="member.html?mode=login">로그인</a><a class="btn line" href="member.html?mode=join">회원가입</a></p>'); return; }
+    }
     var hint = cfg.pub ? "" : '<div class="notice">접수된 내용은 편집국에서만 확인할 수 있습니다.</div>';
-    shell(hint+'<form class="form" id="f"><label>제목</label><input name="title" required maxlength="120"><label>작성자</label><input name="author" required maxlength="40"><label>연락처(이메일 또는 전화)</label><input name="contact" maxlength="80" '+(cfg.pub?"":"required")+'><label>내용</label><textarea name="body" required maxlength="5000"></textarea><input name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true"><p style="margin-top:20px"><button class="btn">등록</button> '+(cfg.pub?'<a class="btn line" href="board.html?b='+b+'">목록</a>':"")+'</p><p id="msg" style="color:#d62828"></p></form>');
+    shell(hint+'<form class="form" id="f"><label>제목</label><input name="title" required maxlength="120"><label>작성자</label><input name="author" required maxlength="40" value="'+E(me&&me.name||"")+'"><label>연락처(이메일 또는 전화)</label><input name="contact" maxlength="80" '+(cfg.pub?"":"required")+'><label>내용</label><textarea name="body" required maxlength="5000"></textarea><input name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true"><p style="margin-top:20px"><button class="btn">등록</button> '+(cfg.pub?'<a class="btn line" href="board.html?b='+b+'">목록</a>':"")+'</p><p id="msg" style="color:#d62828"></p></form>');
     document.getElementById("f").onsubmit=async function(e){
       e.preventDefault(); var fd=new FormData(e.target); if(fd.get("website")) return;
       try{ await TN.addPost({board:b,title:fd.get("title"),author:fd.get("author"),contact:fd.get("contact")||null,body:fd.get("body")}); app.querySelector("main").innerHTML='<div class="ph-head"><h1>'+E(cfg.t)+'</h1></div><p style="padding:60px 0;text-align:center">접수되었습니다. 감사합니다.</p><p style="text-align:center"><a class="btn" href="index.html">홈으로</a></p>'; }

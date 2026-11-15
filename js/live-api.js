@@ -8,6 +8,7 @@ if (!TN.live) {
   TN.ready = Promise.resolve();
   var unavailable = async function () { throw new Error(OFF); };
   TN.ops = {ready:function(){return false;},context:unavailable,list:unavailable,save:unavailable,transition:unavailable,history:unavailable,members:unavailable,assign:unavailable};
+  TN.net = {ready:function(){return false;},list:unavailable,get:unavailable,me:unavailable,saveProfile:unavailable,save:unavailable,mine:unavailable,visibility:unavailable,pray:unavailable,report:unavailable,moderate:unavailable,adminList:unavailable,legacy:unavailable};
   return;
 }
 var bootstrapAttemptedFor = null;
@@ -177,6 +178,38 @@ TN.ops = {
   members:async function(){var rows=await rpc('members_list');return (Array.isArray(rows)?rows:[]).map(function(m){return Object.assign({},m,{roles:roles(m.roles)});});},
   assign:async function(userId,role,departmentCode){var result=await rpc('staff_assign',{p_user_id:userId,p_role:role==='writer'?'staff_writer':role,p_department_code:departmentCode||null},true);lastContext=null;return result?Object.assign({},result,{role:roleName(result.role)}):result;}
 };
+
+var NET_KINDS=['news','prayer','event'];
+function netClean(q){return String(q||'').replace(/[,()*%_"\\]/g,' ').trim().slice(0,60);}
+TN.net = {
+  ready:function(){return !!client && !startupError;},
+  list:async function(o){
+    await ready();o=o||{};
+    var q=db.from('network_posts').select('id,kind,author_label,ministry_role,organization,region,country,title,summary,body,images,event_start,event_end,event_place,event_online,event_url,prayer_status,answer_note,prayer_count,status,created_at,updated_at',{count:'exact'}).eq('status','published');
+    if(o.kind){if(!NET_KINDS.includes(o.kind))throw safeError('게시판 구분을 확인해 주세요.');q=q.eq('kind',o.kind);}
+    if(o.region)q=q.eq('region',String(o.region));
+    if(o.author_label)q=q.eq('author_label',String(o.author_label));
+    if(o.prayer_status)q=q.eq('prayer_status',String(o.prayer_status));
+    var s=netClean(o.q);if(s)q=q.or('title.ilike.*'+s+'*,summary.ilike.*'+s+'*,body.ilike.*'+s+'*');
+    if(o.upcoming===true)q=q.gte('event_start',new Date(Date.now()-864e5).toISOString().slice(0,10)).order('event_start',{ascending:true});
+    else if(o.upcoming===false)q=q.lt('event_start',new Date(Date.now()-864e5).toISOString().slice(0,10)).order('event_start',{ascending:false});
+    else q=q.order('created_at',{ascending:false});
+    if(o.exclude)q=q.neq('id',Number(o.exclude));
+    var off=Number(o.offset||0),lim=Number(o.limit||12);q=q.range(off,off+lim-1);
+    var r=await run(q,false);return {data:r.data||[],count:r.count};
+  },
+  get:async function(id){await ready();var r=await run(db.from('network_posts').select('id,kind,author_label,ministry_role,organization,region,country,title,summary,body,images,event_start,event_end,event_place,event_online,event_url,prayer_status,answer_note,prayer_count,status,created_at,updated_at').eq('id',Number(id)).maybeSingle(),false);return r.data||null;},
+  me:async function(){await ready();if(!authUser)return null;await requireProfile();return rpc('network_me');},
+  saveProfile:function(p){p=p||{};return rpc('network_profile_save',{p_role:p.role,p_organization:p.organization||'',p_region:p.region,p_country:p.country||'',p_privacy:p.privacy||'public'},true);},
+  save:function(post){return rpc('network_save',{p_post:post||{}},true);},
+  mine:async function(){var r=await rpc('network_my_posts');return Array.isArray(r)?r:[];},
+  visibility:function(id,hidden){return rpc('network_owner_visibility',{p_id:Number(id),p_hidden:!!hidden},true);},
+  pray:function(id){return rpc('network_pray',{p_id:Number(id)},true);},
+  report:function(id,reason){return rpc('network_report',{p_id:Number(id),p_reason:String(reason||'')},true);},
+  moderate:function(id,action,reason){return rpc('network_moderate',{p_id:Number(id),p_action:action,p_reason:reason||''},true);},
+  adminList:async function(){var r=await rpc('network_admin_list');return Array.isArray(r)?r:[];},
+  legacy:async function(ids){await ready();var r=await run(db.from('articles').select('id,section_id,title,summary,image_url,author,published_at').eq('status','published').lte('published_at',new Date().toISOString()).in('section_id',ids).order('published_at',{ascending:false}).limit(30),false);return r.data||[];}
+};
 var M = TN.member = {
   ready:function(){return !!TN.live;},
   enabledOAuth:function(){return Array.isArray(C.OAUTH_PROVIDERS)?C.OAUTH_PROVIDERS.slice():[];},
@@ -230,7 +263,7 @@ async function jpeg(file,maxBytes) {
 TN.compressImage=jpeg;
 TN.upload=async function(file,opts){opts=opts||{};
   await ready();if(!file||!['image/jpeg','image/png','image/webp'].includes(file.type)||!file.size||file.size>5*1024*1024)throw safeError('JPG·PNG·WebP 원본 5MB 이하 파일만 올릴 수 있습니다.');
-  var p=await requireProfile(),ctx=await context();if(!ctx.can_admin&&!ctx.allowed_section_ids.length)throw safeError('이미지 업로드 권한이 필요합니다.');
+  var p=await requireProfile(),ctx=await context();
   if(!ctx.uploads_enabled)throw safeError('이미지 업로드는 아직 열리지 않았습니다. 검증된 외부 HTTPS 이미지 주소를 사용해 주세요.');
   var blob=await jpeg(file,opts.maxBytes),bucket=C.MEDIA_BUCKET,name=p.id+'/'+crypto.randomUUID()+'.jpg';
   if(!authUser||authUser.id!==p.id)throw safeError('로그인 계정이 변경되었습니다. 다시 확인해 주세요.');

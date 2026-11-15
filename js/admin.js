@@ -22,7 +22,7 @@ function loginView(msg){
 }
 
 /* ---------- 틀 ---------- */
-var NAV=[["dash","대시보드"],["edit/new","새 기사 쓰기"],["articles","기사 목록·수정"],["members","회원·권한 관리"],["sections","메뉴·섹션"],["banners","배너"],["inbox","접수함"],["applications","선교사·기자단 승인"],["pages","고정 페이지"],["settings","사이트 설정"]];
+var NAV=[["dash","대시보드"],["edit/new","새 기사 쓰기"],["articles","기사 목록·수정"],["members","회원·권한 관리"],["sections","메뉴·섹션"],["banners","배너"],["inbox","접수함"],["network","선교 네트워크 관리"],["applications","선교사·기자단 승인"],["pages","고정 페이지"],["settings","사이트 설정"]];
 async function start(){
   document.body.className="";
   secs=await TN.sections();
@@ -191,6 +191,28 @@ VIEWS.members=async function(m){
     });
   }
   $("#msq").oninput=draw;draw();
+};
+/* ---------- 선교 네트워크 관리 (숨김·복구·신고 확인) ---------- */
+VIEWS.network=async function(m){
+  if(!TN.net||!TN.net.ready()){m.innerHTML='<h2>선교 네트워크 관리</h2><div class="card muted">운영서버에 연결된 사이트에서만 사용할 수 있습니다.</div>';return;}
+  var rows=await TN.net.adminList(), KIND={news:"선교사 소식",prayer:"긴급기도",event:"협력 행사"}, filter="all";
+  m.innerHTML='<div class="bar"><h2>선교 네트워크 관리</h2><a class="b line" href="network.html" target="_blank" rel="noopener">선교 네트워크 보기 ↗</a></div>'+
+   '<div class="card"><p>가입한 목사·선교사가 올린 글은 <b>바로 공개</b>됩니다. 부적절한 글은 <b>숨김</b>으로 내리고, 필요하면 <b>다시 공개</b>할 수 있습니다. 삭제는 하지 않습니다.</p><p class="muted">신고가 들어온 글이 위쪽에 표시됩니다. 운영 관리자, 편집인, 발행인, 부서 편집위원이 처리할 수 있습니다.</p>'+
+   '<div class="filters"><select id="nwf"><option value="all">전체 글</option><option value="reported">신고된 글</option><option value="hidden">숨긴 글</option><option value="published">공개 중</option></select></div></div><div id="nwl"></div>';
+  function draw(){
+    var list=rows.filter(function(r){return filter==="all"||(filter==="reported"?r.report_count>0:r.status===filter);});
+    $("#nwl").innerHTML=list.length?'<div class="card"><table class="tbl"><thead><tr><th>상태</th><th>구분</th><th>제목</th><th>작성자</th><th>신고</th><th>작성일</th><th></th></tr></thead><tbody>'+list.map(function(r){
+      var hid=r.status==="hidden";
+      return '<tr><td><span class="pill'+(hid?'':' ok')+'">'+(hid?(r.hidden_reason==="작성자 비공개"?"작성자 비공개":"숨김"):"공개")+'</span></td><td>'+E(KIND[r.kind]||r.kind)+'</td><td><a href="network.html?id='+r.id+'" target="_blank" rel="noopener">'+E(r.title)+'</a>'+
+       (r.reports&&r.reports.length?'<div class="muted" style="font-size:13px;margin-top:4px">신고: '+r.reports.map(function(x){return E(x.reason);}).join(" / ")+'</div>':'')+(hid&&r.hidden_reason?'<div class="muted" style="font-size:13px">숨김 사유: '+E(r.hidden_reason)+'</div>':'')+'</td>'+
+       '<td>'+E(r.author_label)+'<div class="muted" style="font-size:12px">'+E(r.author_email||"")+'</div></td><td>'+(r.report_count?'<b style="color:#c0392b">'+r.report_count+'</b>':'0')+'</td><td>'+TN.fmt(r.created_at,true).slice(0,10)+'</td>'+
+       '<td class="act">'+(hid?(r.hidden_reason==="작성자 비공개"?'<span class="muted">작성자 관리</span>':'<a href="#" data-restore="'+r.id+'">다시 공개</a>'):'<a href="#" class="dng" data-hide="'+r.id+'">숨김</a>')+'</td></tr>';
+    }).join("")+'</tbody></table></div>':'<div class="card muted">해당하는 글이 없습니다.</div>';
+    [].forEach.call(document.querySelectorAll("[data-hide]"),function(a){a.onclick=async function(e){e.preventDefault();var why=prompt("숨기는 이유를 적어 주세요. (운영 기록에 남습니다)","");if(why===null)return;try{await TN.net.moderate(a.dataset.hide,"hide",why);toast("숨겼습니다.");rows=await TN.net.adminList();draw();}catch(err){toast("실패: "+err.message,1);}};});
+    [].forEach.call(document.querySelectorAll("[data-restore]"),function(a){a.onclick=async function(e){e.preventDefault();if(!confirm("이 글을 다시 공개할까요?"))return;try{await TN.net.moderate(a.dataset.restore,"restore","");toast("다시 공개했습니다.");rows=await TN.net.adminList();draw();}catch(err){toast("실패: "+err.message,1);}};});
+  }
+  $("#nwf").onchange=function(){filter=this.value;draw();};
+  draw();
 };
 /* ---------- 배너 ---------- */
 VIEWS.banners=async function(m){

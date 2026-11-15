@@ -323,7 +323,8 @@ function bindLogin(root,ctx){
   },async function(f){
     await ctx.m.login(val(f,"email").trim(),val(f,"password"));
     f.elements.password.value="";
-    location.assign(url("account","login"));
+    var back=""; try{back=sessionStorage.getItem("tn_after_login")||"";sessionStorage.removeItem("tn_after_login");}catch(_){}
+    if(/^(network|board)\.html(\?[A-Za-z0-9=&%_.-]*)?$/.test(back)) location.assign(back); else location.assign(url("account","login"));
   });
 }
 function bindApply(root,ctx){
