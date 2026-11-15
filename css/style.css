@@ -211,3 +211,6 @@ button{font:inherit;cursor:pointer}
 
 /* 회원·신청 링크가 작은 화면에서도 겹치지 않도록 배치 */
 .top .wrap{height:auto;min-height:36px;gap:8px;flex-wrap:wrap;padding-top:6px;padding-bottom:6px}.top .l,.top .r{display:flex;align-items:center;flex-wrap:wrap;row-gap:6px;min-width:0}.top .r span{white-space:nowrap}
+
+.adpair.one{grid-template-columns:1fr}.focus.noad{grid-template-columns:repeat(3,1fr)}.focus.noad .it:last-child{border-right:0}
+.net-it h4 small{display:inline-block;font-size:12px;color:var(--brand);font-weight:700;margin-right:4px}
