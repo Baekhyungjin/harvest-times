@@ -48,10 +48,11 @@ button{font:inherit;cursor:pointer}
 .ad{background:#eceef2;border:1px dashed #c3c8d1;color:#98a0ad;display:flex;align-items:center;justify-content:center;font-size:13px;text-align:center;overflow:hidden}
 .ad img{width:100%;height:100%;object-fit:cover}
 .skywrap{position:relative}
-.skyL,.skyR{position:absolute;top:0;width:120px;height:100%}
-.skyL{left:calc(50% - 600px - 140px)}.skyR{right:calc(50% - 600px - 140px)}
-.skyL .ad,.skyR .ad{height:540px;position:sticky;top:70px}
-@media(max-width:1560px){.skyL,.skyR{display:none}}
+.skyL,.skyR{position:absolute;top:24px;width:120px;z-index:5}
+.skyL{left:calc(50% - 600px - 150px)}.skyR{right:calc(50% - 600px - 150px)}
+.skyL .ad,.skyR .ad{height:540px}
+.skyx{position:absolute;top:-12px;right:-12px;width:28px;height:28px;border-radius:50%;border:1px solid #cfd5df;background:#fff;color:#333;font-size:18px;line-height:1;cursor:pointer;z-index:2;box-shadow:0 2px 6px rgba(0,0,0,.15)}.skyx:hover{background:#0b3b8f;color:#fff;border-color:#0b3b8f}
+@media(max-width:1720px){.skyL,.skyR{display:none}}
 .hero{background:var(--bg);padding:48px 0}
 .hero .wrap{display:grid;grid-template-columns:1fr 696px;gap:48px;align-items:center}
 .hero h1{font-size:44px;line-height:1.3;margin:0 0 28px;font-weight:800;letter-spacing:-.03em}
