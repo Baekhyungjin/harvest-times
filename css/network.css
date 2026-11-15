@@ -68,6 +68,7 @@
 .nw-legacy small{display:block;color:#7a8597;font-size:12px;margin-bottom:4px}.nw-legacy b{font-size:15px;line-height:1.45}
 .nw-empty{padding:56px 20px;text-align:center;background:#f7f9fc;border:1px dashed #cdd5e1;border-radius:12px}
 .nw-empty h2{font-size:21px;margin:0 0 8px}.nw-empty p{color:#5b6676;margin:0 0 18px}
+.wrap.nw-narrow{width:100%;max-width:860px;box-sizing:border-box}
 .nw-narrow{max-width:860px;padding-top:26px;padding-bottom:70px}
 .nw-crumb{display:flex;gap:8px;font-size:14px;color:#7a8597;margin-bottom:18px}.nw-crumb a{color:#33435c}
 .nw-article h1{font-size:34px;line-height:1.35;letter-spacing:-.03em;margin:6px 0 14px}
