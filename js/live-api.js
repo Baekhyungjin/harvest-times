@@ -94,7 +94,7 @@ async function context() {
   if(bootstrapAttemptedFor!==profile.id){bootstrapAttemptedFor=profile.id;try{await rpc("claim_initial_admin",{},true);}catch(_){}}
   var ctx = await rpc("workspace_context");
   if (!ctx || !ctx.profile || ctx.profile.id !== profile.id) throw safeError('본인 편집 권한을 확인할 수 없습니다.');
-  var secs = Array.isArray(ctx.sections) ? ctx.sections : [], rs = roles(ctx.roles), allowed = new Set();
+  var secs = (Array.isArray(ctx.sections) ? ctx.sections : []).filter(function(s){return s.visible !== false;}), rs = roles(ctx.roles), allowed = new Set();
   var leaves = secs.filter(function(s){return s.parent_id != null && ['news','photo','video'].includes(s.kind) && !s.link_url && !secs.some(function(x){return String(x.parent_id) === String(s.id);});});
   var full = rs.some(function(r){return r.role === 'publisher' || r.role === 'editor_in_chief';});
   leaves.forEach(function(s){if(full || rs.some(function(r){return (r.role === 'writer' || r.role === 'department_editor') && r.department_code && r.department_code === s.department_code;})) allowed.add(s.id);});

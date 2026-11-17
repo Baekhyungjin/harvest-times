@@ -4,9 +4,10 @@ var NEWS_KINDS={news:"기사(일반)",photo:"포토",video:"영상",board:"게�
 var secs=[];
 function toast(m,err){ var t=$("#toast"); t.textContent=m; t.style.background=err?"#c0392b":"#222"; t.style.opacity=1; setTimeout(function(){t.style.opacity=0;},2600); }
 function secOptions(sel,onlyLeaf){
-  var top=secs.filter(function(s){return !s.parent_id;}).sort(function(a,b){return a.sort-b.sort;});
+  var show=function(s){return s.visible!==false||String(sel)===String(s.id);};
+  var top=secs.filter(function(s){return !s.parent_id&&(show(s)||secs.some(function(c){return c.parent_id===s.id&&String(sel)===String(c.id);}));}).sort(function(a,b){return a.sort-b.sort;});
   return top.map(function(t){
-    var k=secs.filter(function(s){return s.parent_id===t.id;}).sort(function(a,b){return a.sort-b.sort;});
+    var k=secs.filter(function(s){return s.parent_id===t.id&&(show(s)&&(t.visible!==false||String(sel)===String(s.id)));}).sort(function(a,b){return a.sort-b.sort;});
     return '<option value="'+t.id+'"'+(onlyLeaf&&k.length?' disabled':'')+(String(sel)===String(t.id)?" selected":"")+'>'+E(t.name)+'</option>'+k.map(function(c){return '<option value="'+c.id+'"'+(onlyLeaf&&(c.kind==='page'||c.kind==='board')?' disabled':'')+(String(sel)===String(c.id)?" selected":"")+'>&nbsp;&nbsp;- '+E(c.name)+'</option>';}).join("");
   }).join("");
 }

@@ -163,7 +163,8 @@ async function board(U){
   var b=U.q("b")||"free";
   var bsec=U.sections.filter(function(s){return String(s.id)===String(U.q("s"))||s.code===b;})[0], bnt=bsec&&U.netTab(bsec);
   if(bnt||/^mission-network/.test(b)){ location.replace("network.html"+(bnt&&bnt!=="all"?"?tab="+bnt:"")); return; }
-  if(!Object.prototype.hasOwnProperty.call(BOARDS,b))b="free"; var cfg=BOARDS[b];
+  if(!Object.prototype.hasOwnProperty.call(BOARDS,b)||b==="free"){ if(bsec)U.header(bsec.id); document.title=(bsec?bsec.name:"게시판")+" - "+U.S.site_name; document.getElementById("app").innerHTML='<div class="wrap"><div class="cols"><main><div class="ph-head"><h1>'+E(bsec?bsec.name:"게시판")+'</h1></div><div class="empty-state"><h2>준비 중인 게시판입니다.</h2><p>곧 이용하실 수 있도록 준비하고 있습니다. 소식은 <a href="network.html">선교 네트워크</a>와 <a href="board.html?b=report&amp;write=1">기사제보</a>를 이용해 주세요.</p></div></main>'+(await U.sidebar())+'</div></div>'; return; }
+  var cfg=BOARDS[b];
   var id=U.q("id"), write=U.q("write")==="1"||!cfg.pub, pg=parseInt(U.q("p")||"1",10), size=15;
   var app=document.getElementById("app");
   function shell(inner){ app.innerHTML='<div class="wrap"><div class="cols"><main><div class="ph-head"><h1>'+E(cfg.t)+'</h1></div>'+inner+'</main><aside class="side">'+U.ad("side_1","sq")+U.ad("side_2","tall")+'</aside></div></div>'; }
