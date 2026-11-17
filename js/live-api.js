@@ -25,6 +25,7 @@ function errorFor(err, write) {
   else if (code === 'over_email_send_rate_limit' || code === 'over_request_rate_limit' || /rate limit/i.test(text)) msg = '요청이 많습니다. 잠시 기다린 뒤 다시 시도해 주세요.';
   else if (code === '42501' || /permission denied|forbidden/i.test(text)) msg = '이 작업을 수행할 권한이 없습니다.';
   else if (code === '23505') msg = '이미 등록되었거나 처리 중인 항목입니다. 목록을 먼저 확인해 주세요.';
+  else if (code === 'P0001' && text && /[가-힣]/.test(text) && text.length < 300) msg = text;
   else if (code === 'PGRST301' || code === 'PGRST302' || /jwt|session.*missing|not authenticated|인증|검증된 이메일/i.test(text)) msg = '이메일 인증과 로그인 상태를 확인해 주세요.';
   else if (/fetch|network|timeout|failed to send/i.test(text) || Number(err && err.status) >= 500) msg = write ? '연결 오류로 처리 결과를 확인할 수 없습니다. 중복 요청하지 말고 목록에서 결과를 먼저 확인해 주세요.' : '운영서버 연결을 확인해 주세요.';
   else if (code === 'PGRST202' || code === 'PGRST205' || /schema cache/i.test(text)) msg = '운영서버 API가 아직 준비되지 않았습니다. 관리자에게 문의해 주세요.';

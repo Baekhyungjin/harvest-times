@@ -7,9 +7,10 @@ U.netTab = function(s){
   var all=U.sections||[], par=all.filter(function(x){return x.id===s.parent_id;})[0];
   if(s.code==="mission-network") return "all";
   if(!par||par.code!=="mission-network") return null;
-  if(s.code==="partner-events"||/행사|대회/.test(s.name||"")) return "event";
+  if(s.code==="mission-updates") return "news";
+  if(s.code==="partner-events") return "event";
   if(/기도/.test(s.name||"")) return "prayer";
-  return "news";
+  return null;
 };
 U.secUrl = function(s){
   var nt=U.netTab(s); if(nt) return "network.html"+(nt==="all"?"":"?tab="+nt);
