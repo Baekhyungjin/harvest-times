@@ -129,12 +129,16 @@ async function list(U){
 
 /* ---------------- 기사 ---------------- */
 async function article(U){
-  var id=U.q("id"), a=id?await TN.get("articles","id",id):null;
+  var id=U.q("id")||document.body.getAttribute("data-article-id"), a=id?await TN.get("articles","id",id):null;
   if(a&&a.status!=="published"&&!await TN.isAdmin())a=null;
   if(!a){ document.getElementById("app").innerHTML='<div class="wrap" style="padding:80px 0;text-align:center"><h2>기사를 찾을 수 없습니다.</h2><p><a class="btn" href="index.html">홈으로</a></p></div>'; return; }
   var sec=U.sections.filter(function(s){return s.id===a.section_id;})[0];
   var rel=(await TN.published({section_id:"eq."+a.section_id,id:"neq."+a.id},{limit:5})).data||[];
   document.title=a.title+" - "+U.S.site_name;
+  try{ var canon=document.querySelector('link[rel="canonical"]'), seoUrl=new URL("news/"+a.id+".html",document.baseURI).href, seoDesc=String(a.summary||a.subtitle||"").replace(/\s+/g," ").trim().slice(0,150);
+    if(canon) canon.href=seoUrl; var ogu=document.querySelector('meta[property="og:url"]'); if(ogu) ogu.content=seoUrl;
+    if(seoDesc){ var md=document.querySelector('meta[name="description"]'); if(md) md.content=seoDesc; var ogd=document.querySelector('meta[property="og:description"]'); if(ogd) ogd.content=seoDesc; }
+    var ogt=document.querySelector('meta[property="og:title"]'); if(ogt) ogt.content=a.title; }catch(_){}
   var sk="art-"+a.id; if(!sessionStorage.getItem(sk)&&a.status==="published"){ sessionStorage.setItem(sk,"1"); TN.bump(a.id); }
   document.getElementById("app").innerHTML='<div class="wrap"><div class="cols"><main class="art">'+
    (a.status!=="published"?'<div class="notice">미리보기: 아직 발행되지 않은 기사입니다. (관리자만 볼 수 있습니다)</div>':"")+
@@ -209,7 +213,7 @@ var MAP={home:home,list:list,article:article,board:board,page:page};
 var active = null;
 TNUI.boot(null,async function(U){
   var sid=P==='list'?U.q('s'):P==='board'?5112:P==='page'&&U.q('slug')==='support'?6112:null;
-  if(P==='article'){var a=await TN.get('articles','id',U.q('id'));if(a)sid=a.section_id;}
+  if(P==='article'){var a=await TN.get('articles','id',U.q('id')||document.body.getAttribute('data-article-id'));if(a)sid=a.section_id;}
   if(sid)U.header(sid);
   return MAP[P](U);
 });
