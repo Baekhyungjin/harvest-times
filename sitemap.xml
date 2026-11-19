@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url><loc>https://baekhyungjin.github.io/harvest-times/</loc><lastmod>2026-11-19</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url>
-<url><loc>https://baekhyungjin.github.io/harvest-times/network.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+<url><loc>https://baekhyungjin.github.io/harvest-times/network.html</loc><lastmod>2026-11-19</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
 <url><loc>https://baekhyungjin.github.io/harvest-times/list.html?s=1001</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
 <url><loc>https://baekhyungjin.github.io/harvest-times/list.html?s=2111</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
 <url><loc>https://baekhyungjin.github.io/harvest-times/list.html?s=6111</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
@@ -27,6 +27,12 @@
 <url><loc>https://baekhyungjin.github.io/harvest-times/mall.html?view=mall</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
 <url><loc>https://baekhyungjin.github.io/harvest-times/mall.html?view=pension</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
 <url><loc>https://baekhyungjin.github.io/harvest-times/organization.html</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+<url><loc>https://baekhyungjin.github.io/harvest-times/news/63.html</loc><lastmod>2026-11-19</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>https://baekhyungjin.github.io/harvest-times/news/62.html</loc><lastmod>2026-11-19</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>https://baekhyungjin.github.io/harvest-times/news/61.html</loc><lastmod>2026-11-19</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>https://baekhyungjin.github.io/harvest-times/news/59.html</loc><lastmod>2026-11-19</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>https://baekhyungjin.github.io/harvest-times/news/58.html</loc><lastmod>2026-11-19</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>https://baekhyungjin.github.io/harvest-times/news/57.html</loc><lastmod>2026-11-19</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
 <url><loc>https://baekhyungjin.github.io/harvest-times/news/56.html</loc><lastmod>2026-11-19</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
 <url><loc>https://baekhyungjin.github.io/harvest-times/news/55.html</loc><lastmod>2026-11-19</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
 <url><loc>https://baekhyungjin.github.io/harvest-times/news/54.html</loc><lastmod>2026-11-18</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -81,4 +87,6 @@
 <url><loc>https://baekhyungjin.github.io/harvest-times/news/2.html</loc><lastmod>2026-11-15</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
 <url><loc>https://baekhyungjin.github.io/harvest-times/news/3.html</loc><lastmod>2026-08-04</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
 <url><loc>https://baekhyungjin.github.io/harvest-times/news/29.html</loc><lastmod>2026-08-01</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>https://baekhyungjin.github.io/harvest-times/network.html?id=10</loc><lastmod>2026-11-19</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>
+<url><loc>https://baekhyungjin.github.io/harvest-times/network.html?id=9</loc><lastmod>2026-11-19</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>
 </urlset>
