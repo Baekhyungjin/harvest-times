@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /editor.html
+Disallow: /member.html
+
+Sitemap: https://baekhyungjin.github.io/harvest-times/sitemap.xml
