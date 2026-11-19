@@ -49,7 +49,7 @@ U.header = function(active){
   var logo = S.logo_url ? '<img src="'+E(S.logo_url)+'" alt="'+E(S.site_name)+'">' : '<b>'+E(S.site_name.replace(/ ?전자신문/,"")||S.site_name)+'</b><small>'+E(S.site_en)+'</small>';
   var h = '<div class="top"><div class="wrap"><div class="l"><a href="board.html?b=report&write=1">기사제보</a><a href="board.html?b=ad&write=1">광고문의</a><a href="member.html?mode=apply">기자단·선교사 신청</a><a href="editor.html">편집실</a><a href="organization.html">조직도</a></div>'+
     '<div class="r"><span>'+date+'</span><a href="member.html?mode=login" id="member-login-link">로그인</a><a href="member.html?mode=join" id="member-signup-link">회원가입</a></div></div></div>'+
-    '<div class="logoarea"><div class="wrap"><div class="tb">'+U.ad("top_left")+'</div><a class="logo" href="index.html">'+logo+'</a></div></div>'+
+    '<div class="logoarea"><div class="wrap"><div class="tb">'+U.ad("top_left")+'</div><a class="logo" href="index.html">'+logo+'</a><a class="kakao-ch" href="https://pf.kakao.com/_rBZUG/chat" target="_blank" rel="noopener" aria-label="카카오톡 채널로 상담하기 (새 창)"><img src="assets/kakao-talk.png" alt="" width="54" height="54"><span>카카오톡 상담</span></a></div></div>'+
     '<div class="gnb"><div class="wrap"><button class="ham" aria-label="전체메뉴"><i></i></button><ul class="m">'+
     top.map(function(s){return '<li><a href="'+E(U.secUrl(s))+'" data-id="'+s.id+'" class="'+(s.id===subOwner?"on":"")+'">'+E(s.name)+'</a></li>';}).join("")+'</ul>'+
     '<button class="sch" aria-label="검색"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#111" stroke-width="2"><circle cx="10.5" cy="10.5" r="7"/><path d="M16 16l5 5"/></svg></button>'+
@@ -75,7 +75,7 @@ U.footer = function(){
   document.getElementById("ftr").innerHTML = '<div class="ft"><div class="wrap"><a class="logo" href="index.html">'+logo+'</a><div><nav>'+
     links.map(function(l){ var href = l[1]==="@organization" ? "organization.html" : l[1]==="@guide" ? "guide.html" : l[1]==="@member" ? "member.html?mode=apply" : l[1].charAt(0)==="@" ? "board.html?b="+l[1].slice(1)+"&write=1" : "page.html?slug="+l[1]; return '<a class="'+(l[2]||"")+'" href="'+href+'">'+l[0]+'</a>'; }).join("")+'</nav>'+
     '<p><span>주소: '+E(S.address)+'</span><span>대표전화: '+E(S.phone)+'</span><span>청소년보호책임자: '+E(S.youth_officer)+'</span><br><span>제호: '+E(S.reg_title)+'</span><span>등록번호: '+E(S.reg_no)+'</span><span>등록일: '+E(S.reg_date)+'</span><span>발행인: '+E(S.publisher)+'</span><span>편집인: '+E(S.editor_in_chief||"[편집인 입력]")+'</span></p>'+
-    '<p>'+E(S.copyright)+'</p></div></div></div><button class="totop" aria-label="맨 위로">&#8593;</button>';
+    '<p>'+E(S.copyright)+'</p></div></div></div><a class="kakao-float" href="https://pf.kakao.com/_rBZUG/chat" target="_blank" rel="noopener" aria-label="카카오톡 채널로 상담하기 (새 창)"><img src="assets/kakao-talk.png" alt="" width="46" height="46"></a><button class="totop" aria-label="맨 위로">&#8593;</button>';
   document.querySelector(".totop").onclick=function(){window.scrollTo({top:0,behavior:"smooth"});};
 };
 U.demoBar = function(){
@@ -122,6 +122,7 @@ U.boot = async function(active, fn){
   U.header(active);
   await fn(U);
   U.footer();
+  try{ if(TN.visit){ var vd=new Date(Date.now()+9*36e5).toISOString().slice(0,10), seen=localStorage.getItem("tn_visit_day"); TN.visit(seen!==vd); localStorage.setItem("tn_visit_day",vd); } }catch(_){}
   var w=document.getElementById("app");
   if(w){
     var scope=(U.S&&U.S.sky_banner_scope)||"home", isHome=document.body.getAttribute("data-page")==="home", closed=false;

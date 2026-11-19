@@ -40,15 +40,28 @@ async function route(){
 
 var VIEWS={};
 /* ---------- 대시보드 ---------- */
+function drawVisits(){
+  var box=document.getElementById("visits"); if(!box||!TN.visitStats) return;
+  TN.visitStats().then(function(v){
+    var n=function(x){return Number(x||0).toLocaleString("ko-KR");};
+    var cell=function(label,o){return '<div><small>'+label+'</small><b>'+n(o&&o.visitors)+'</b><span class="muted">페이지뷰 '+n(o&&o.views)+'</span></div>';};
+    var days=(v.days||[]), max=Math.max.apply(null,days.map(function(d){return d.visitors;}).concat([1]));
+    box.innerHTML='<h3>방문자 현황</h3><div class="vstats">'+cell("오늘",v.today)+cell("이번 달",v.month)+cell("올해",v.year)+'</div>'+
+      '<div class="vbars" aria-label="최근 14일 방문자">'+days.map(function(d){var h=Math.round(d.visitors/max*100);return '<div title="'+d.day+' 방문자 '+d.visitors+'명 · 페이지뷰 '+d.views+'"><i style="height:'+Math.max(h,2)+'%"></i><em>'+String(d.day).slice(8,10)+'</em></div>';}).join("")+'</div>'+
+      '<p class="muted">방문자는 같은 브라우저를 하루에 한 번만 셉니다(한국 시간 기준). 2026년 11월 19일부터 집계했습니다.</p>';
+  }).catch(function(e){ box.innerHTML='<h3>방문자 현황</h3><p class="muted">'+E(e.message)+'</p>'; });
+}
 VIEWS.dash=async function(m){
   var pub=await TN.list("articles",{filters:{status:"eq.published"},limit:1}), dr=await TN.list("articles",{filters:{status:"eq.draft"},limit:1}),
       inb=await TN.list("posts",{filters:{status:"eq.open"},limit:1});
   var rec=(await TN.list("articles",{order:"created_at.desc",limit:8})).data||[];
   m.innerHTML='<div class="bar"><h2>대시보드</h2><a class="b" href="#/edit/new">+ 새 기사 쓰기</a></div><div class="stats"><div class="card"><small>발행된 기사</small><b>'+(pub.count||0)+'</b></div><div class="card"><small>임시저장</small><b>'+(dr.count||0)+'</b></div><div class="card"><small>미확인 접수</small><b>'+(inb.count||0)+'</b></div></div>'+
+   '<div class="card" id="visits"><h3>방문자 현황</h3><p class="muted">불러오는 중…</p></div>'+
    '<div class="card"><h3>최근 기사</h3>'+(rec.length?'<table>'+rec.map(function(a){return '<tr><td><a href="#/edit/'+a.id+'">'+E(a.title)+'</a></td><td>'+E(secName(a.section_id))+'</td><td>'+(a.status==="published"?"발행":"임시")+'</td></tr>';}).join("")+'</table>':'<p class="muted">아직 기사가 없습니다. "새 기사 쓰기"에서 첫 기사를 등록하세요.</p>')+'</div>'+
    (TN.demo&&TN.hasSample()?'<div class="card"><h3>예시 데이터 (하베스트대학교 공개 내용 기반)</h3><p class="muted">예시 기사 29건, 광고 배너 8개, 접수 예시 5건입니다. 실제 운영 전에 "예시 데이터 지우기"로 삭제하세요. 지워도 직접 만든 기사는 남습니다.</p><button class="b" id="ldS">예시 데이터 넣기</button> <button class="b line" id="clS">예시 데이터 지우기</button></div>':'')+(TN.demo?'<div class="card"><h3>데모 도구</h3><p class="muted">레이아웃 확인용입니다. 실제 서버(Supabase) 연결 시에는 이 버튼이 데이터를 만들지 않도록 사용하지 마세요.</p><button class="b" id="seed">샘플 기사 24개 만들기</button> <button class="b line" id="rst">데모 데이터 모두 지우기</button></div>':'');
   if($("#ldS")){ $("#ldS").onclick=async function(){ this.disabled=true; try{ await TN.loadSample(); toast("예시 데이터를 넣었습니다."); route(); }catch(e){ toast(e.message,1); } }; $("#clS").onclick=async function(){ if(!confirm("예시 기사, 배너, 접수를 지울까요?"))return; await TN.clearSample(); toast("지웠습니다."); route(); }; }
   if(TN.demo){ $("#seed").onclick=async function(){ await TN.seedSamples(24); toast("샘플 기사를 만들었습니다."); route(); }; $("#rst").onclick=function(){ if(confirm("이 브라우저의 데모 기사·설정·회원·신청·승인 기록을 모두 지우고 로그아웃할까요?")){ TN.demoReset(); location.reload(); } }; }
+  drawVisits();
 };
 /* ---------- 기사 목록 ---------- */
 VIEWS.articles=async function(m){

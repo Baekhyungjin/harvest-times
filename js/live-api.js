@@ -211,6 +211,8 @@ TN.net = {
   adminList:async function(){var r=await rpc('network_admin_list');return Array.isArray(r)?r:[];},
   legacy:async function(ids){await ready();var r=await run(db.from('articles').select('id,section_id,title,summary,image_url,author,published_at').eq('status','published').lte('published_at',new Date().toISOString()).in('section_id',ids).order('published_at',{ascending:false}).limit(30),false);return r.data||[];}
 };
+TN.visit=function(isNew){ready().then(function(){return db.rpc('visit_hit',{p_new:!!isNew});}).catch(function(){});};
+TN.visitStats=function(){return rpc('visit_stats');};
 var M = TN.member = {
   ready:function(){return !!TN.live;},
   enabledOAuth:function(){return Array.isArray(C.OAUTH_PROVIDERS)?C.OAUTH_PROVIDERS.slice():[];},
