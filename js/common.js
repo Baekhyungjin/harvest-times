@@ -47,9 +47,9 @@ U.header = function(active){
   var d=new Date(), wk="일월화수목금토"[d.getDay()], p=function(n){return String(n).padStart(2,"0");};
   var date = "오늘: "+d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes())+" ("+wk+")";
   var logo = S.logo_url ? '<img src="'+E(S.logo_url)+'" alt="'+E(S.site_name)+'">' : '<b>'+E(S.site_name.replace(/ ?전자신문/,"")||S.site_name)+'</b><small>'+E(S.site_en)+'</small>';
-  var h = '<div class="top"><div class="wrap"><div class="l"><a href="board.html?b=report&write=1">기사제보</a><a href="board.html?b=ad&write=1">광고문의</a><a href="member.html?mode=apply">기자단·선교사 신청</a><a href="editor.html">편집실</a><a href="organization.html">조직도</a></div>'+
-    '<div class="r"><span>'+date+'</span><a href="member.html?mode=login" id="member-login-link">로그인</a><a href="member.html?mode=join" id="member-signup-link">회원가입</a></div></div></div>'+
-    '<div class="logoarea"><div class="wrap"><div class="tb">'+U.ad("top_left")+'</div><a class="logo" href="index.html">'+logo+'</a><a class="kakao-ch" href="https://pf.kakao.com/_rBZUG/chat" target="_blank" rel="noopener" aria-label="카카오톡 채널로 상담하기 (새 창)"><img src="assets/kakao-talk.png" alt="" width="54" height="54"><span>카카오톡 상담</span></a></div></div>'+
+  var h = '<div class="top"><div class="wrap"><div class="l"><a href="board.html?b=report&write=1">기사제보</a><a href="board.html?b=ad&write=1">광고문의</a><a href="member.html?mode=apply">기자단·선교사 신청</a></div>'+
+    '<div class="r"><span>'+date+'</span><a href="member.html?mode=login" id="member-login-link">로그인</a><a href="member.html?mode=write" id="member-signup-link" hidden>글쓰기</a></div></div></div>'+
+    '<div class="logoarea"><div class="wrap"><div class="tb">'+U.ad("top_left")+'</div><a class="logo" href="index.html">'+logo+'</a></div></div>'+
     '<div class="gnb"><div class="wrap"><button class="ham" aria-label="전체메뉴"><i></i></button><ul class="m">'+
     top.map(function(s){return '<li><a href="'+E(U.secUrl(s))+'" data-id="'+s.id+'" class="'+(s.id===subOwner?"on":"")+'">'+E(s.name)+'</a></li>';}).join("")+'</ul>'+
     '<button class="sch" aria-label="검색"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#111" stroke-width="2"><circle cx="10.5" cy="10.5" r="7"/><path d="M16 16l5 5"/></svg></button>'+
@@ -57,7 +57,7 @@ U.header = function(active){
     '<div class="sbar"><div class="wrap"><form action="list.html"><input name="q" placeholder="검색어를 입력하세요" aria-label="검색어"><button>검색</button></form></div></div>'+
     '<div class="sub"><div class="wrap" id="subbar"></div></div>';
   document.getElementById("hdr").innerHTML = h;
-  if(TN.member)TN.member.current().then(function(user){if(!user)return;var login=document.getElementById("member-login-link"),join=document.getElementById("member-signup-link");if(login){login.href="member.html?mode=account";login.textContent="마이페이지";}if(join){join.href="member.html?mode=write";join.textContent="글쓰기";}}).catch(function(){});
+  if(TN.member)TN.member.current().then(function(user){if(!user)return;var login=document.getElementById("member-login-link"),join=document.getElementById("member-signup-link");if(login){login.href="member.html?mode=account";login.textContent="마이페이지";}if(join){join.hidden=false;}}).catch(function(){});
   function drawSub(id){
     document.getElementById("subbar").innerHTML = kids(id).map(function(k){return '<a href="'+E(U.secUrl(k))+'" class="'+(k.id==active?"on":"")+'">'+E(k.name)+'</a>';}).join("");
     [].forEach.call(document.querySelectorAll(".gnb ul.m a"),function(a){a.classList.toggle("on",a.dataset.id==id);});
