@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<url><loc>https://harvest-times.com/</loc><lastmod>2026-11-27</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url>
-<url><loc>https://harvest-times.com/network.html</loc><lastmod>2026-11-22</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+<url><loc>https://harvest-times.com/</loc><lastmod>2026-11-28</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url>
+<url><loc>https://harvest-times.com/network.html</loc><lastmod>2026-11-28</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
 <url><loc>https://harvest-times.com/list.html?s=1001</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
 <url><loc>https://harvest-times.com/list.html?s=2111</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
 <url><loc>https://harvest-times.com/list.html?s=6111</loc><changefreq>daily</changefreq><priority>0.6</priority></url>
@@ -27,6 +27,7 @@
 <url><loc>https://harvest-times.com/mall.html?view=mall</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
 <url><loc>https://harvest-times.com/mall.html?view=pension</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>
 <url><loc>https://harvest-times.com/organization.html</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+<url><loc>https://harvest-times.com/news/88.html</loc><lastmod>2026-11-28</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
 <url><loc>https://harvest-times.com/news/87.html</loc><lastmod>2026-11-27</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
 <url><loc>https://harvest-times.com/news/86.html</loc><lastmod>2026-11-26</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
 <url><loc>https://harvest-times.com/news/85.html</loc><lastmod>2026-11-26</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -111,6 +112,7 @@
 <url><loc>https://harvest-times.com/news/2.html</loc><lastmod>2026-11-15</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
 <url><loc>https://harvest-times.com/news/3.html</loc><lastmod>2026-08-04</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
 <url><loc>https://harvest-times.com/news/29.html</loc><lastmod>2026-08-01</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<url><loc>https://harvest-times.com/network.html?id=12</loc><lastmod>2026-11-28</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>
 <url><loc>https://harvest-times.com/network.html?id=11</loc><lastmod>2026-11-22</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>
 <url><loc>https://harvest-times.com/network.html?id=10</loc><lastmod>2026-11-19</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>
 <url><loc>https://harvest-times.com/network.html?id=9</loc><lastmod>2026-11-19</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>
