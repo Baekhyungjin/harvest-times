@@ -8,5 +8,5 @@ window.TN_CONFIG = {
   "MEDIA_UPLOADS_ENABLED": true,
   "OAUTH_PROVIDERS": [],
   "ADMIN_DOMAIN": "",
-  "SITE_STAGE": "preview"
+  "SITE_STAGE": "live"
 };
